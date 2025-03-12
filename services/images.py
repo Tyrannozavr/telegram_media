@@ -1,9 +1,8 @@
-from PIL import Image, ImageDraw, ImageFont
+import io
 from io import BytesIO
-import os
 
 from PIL import Image, ImageFilter, ImageEnhance
-import io
+from PIL import ImageDraw, ImageFont
 
 
 def process_image(image_file: bytes) -> Image.Image:
@@ -68,8 +67,7 @@ def image_to_bytes(image: Image.Image, format: str = 'JPEG') -> bytes:
     img_byte_arr.seek(0)  # Перемещаем указатель в начало потока
     return img_byte_arr.getvalue()  # Возвращаем байты
 
-from PIL import Image, ImageDraw, ImageFont
-from io import BytesIO
+
 
 def cover_text(image_file: bytes, text: str, font_size: int) -> bytes:
     """
@@ -87,15 +85,17 @@ def cover_text(image_file: bytes, text: str, font_size: int) -> bytes:
     draw = ImageDraw.Draw(image)
 
     # Загружаем шрифт (убедитесь, что шрифт доступен в системе)
+    font_path = "arial-bold_tt.ttf"
+
     try:
-        font = ImageFont.truetype("ARIALBOLDMT.OTF", font_size)
+        font = ImageFont.truetype(font_path, size=font_size)
     except IOError:
         # Если шрифт не найден, используем стандартный
         font = ImageFont.load_default()
 
     # Разбиваем текст на строки, если он содержит переносы
     lines = text.split("\n")
-    print("Lines are:", lines)
+    # print("Lines are:", lines)
 
     # Вычисляем размеры текста
     line_heights = []
@@ -124,11 +124,11 @@ def cover_text(image_file: bytes, text: str, font_size: int) -> bytes:
     stripe_y1 = text_y
     stripe_y2 = image.height - padding_bottom
     draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill="white")
-
     # Добавляем текст на изображение
     for line in lines:
         draw.text((text_x, text_y), line, font=font, fill="white")  # fill - цвет текста
         text_y += line_heights[lines.index(line)] + 5  # Переход на следующую строку
+
 
     # Сохраняем результат в байты
     output = BytesIO()

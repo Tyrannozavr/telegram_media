@@ -15,12 +15,12 @@ def test_cover_text():
     "Он содержит длинные слова, такие как 'саморазвитие' и 'высокотехнологичный', "
     "а также короткие слова."
 )
-    test_text = "Какой то текст на проверку"
+    # test_text = "12345hello, world уцацуукцук"
     test_font_size = 100
 
     text_width = calculate_characters_width(test_font_size)
-    output_text = test_text
-    # output_text = wrap_text(test_text, width=text_width)
+    # output_text = test_text
+    output_text = wrap_text(test_text, width=text_width)
     # print("Output text is", output_text)
     image_resized = process_image(image_bytes)
     # image_bytes_resized = image_resized.tobytes()
