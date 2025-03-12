@@ -70,11 +70,12 @@ def image_to_bytes(image: Image.Image, format: str = 'JPEG') -> bytes:
 
 
 
-def cover_text(image_file: bytes, text: str, font_size: int) -> bytes:
+def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@northossetia") -> bytes:
     """
     Создает изображение с текстом, размещенным внизу слева, и белой полосой.
     Добавляет размытую тень для текста и вертикальной линии.
 
+    :param logo:
     :param image_file: Байты загруженного изображения.
     :param text: Текст для наложения.
     :param font_size: Размер шрифта.
@@ -114,12 +115,12 @@ def cover_text(image_file: bytes, text: str, font_size: int) -> bytes:
     padding_left = line_weight + 33  # Отступ слева
     padding_bottom = 251  # Отступ снизу
     text_x = padding_left + 40  # Отступ текста от полосы
-    text_y = image.height - total_text_height - padding_bottom - 40  # Позиция текста по вертикали
+    text_y = image.height - total_text_height - padding_bottom - 20  # Позиция текста по вертикали
 
     # Параметры тени
-    shadow_offset = 15  # Смещение тени (в пикселях)
-    shadow_blur_radius = 3  # Радиус размытия тени
-    shadow_color = (0, 0, 0, 192)  # Цвет тени (черный с прозрачностью 50%)
+    shadow_offset = 10  # Смещение тени (в пикселях)
+    shadow_blur_radius = 4  # Радиус размытия тени
+    shadow_color = (0, 0, 0, 255)
 
     # Создаем временное изображение для тени текста и линии
     shadow_image = Image.new("RGBA", image.size, (0, 0, 0, 0))
@@ -140,10 +141,22 @@ def cover_text(image_file: bytes, text: str, font_size: int) -> bytes:
 
     # Применяем размытие к теням
     shadow_image = shadow_image.filter(ImageFilter.GaussianBlur(shadow_blur_radius))
-
     # Накладываем размытую тень на основное изображение
-    image.paste(shadow_image, (0, 0), shadow_image)
+    # image.paste(shadow_image, (0, 0), shadow_image)
 
+    image = Image.alpha_composite(image, shadow_image)
+    draw = ImageDraw.Draw(image)
+
+    # # Накладываем размытую тень на основное изображение
+    # combined_image = Image.alpha_composite(base_image, shadow_image)
+    #
+    # # Создаем объект для рисования на комбинированном изображении
+    # draw = ImageDraw.Draw(combined_image)
+    #
+    # # Рисуем текст на комбинированном изображении
+    # for i, line in enumerate(text_lines):
+    #     draw.text((text_position[0], text_position[1] + i * line_height), line, font=font, fill="white")
+    #
     # Рисуем белую полосу (основная линия)
     stripe_x1 = padding_left
     stripe_x2 = stripe_x1 + line_weight
@@ -151,11 +164,25 @@ def cover_text(image_file: bytes, text: str, font_size: int) -> bytes:
     stripe_y2 = image.height - padding_bottom
     draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill="white")
 
+
+    logo_size = 45
+    logo_font = ImageFont.truetype(font_path, size=logo_size)
+    bbox = draw.textbbox((0, 0), logo, font=logo_font)
+    additional_text_width = bbox[2] - bbox[0]
+    additional_text_height = bbox[3] - bbox[1]
+
     # Рисуем основной текст
     temp_text_y = text_y
     for line in lines:
         draw.text((text_x, temp_text_y), line, font=font, fill="white")  # fill - цвет текста
         temp_text_y += line_heights[lines.index(line)] + 5  # Переход на следующую строку
+
+    # Позиция дополнительного текста
+    additional_text_x = (image.width - additional_text_width) // 2  # Центрируем по горизонтали
+    additional_text_y = image.height - additional_text_height - 70  # Отступ снизу 30px
+
+
+    draw.text((additional_text_x, additional_text_y), logo, font=logo_font, fill=(255, 255, 255, 128))
 
     # Сохраняем результат в байты
     output = BytesIO()
