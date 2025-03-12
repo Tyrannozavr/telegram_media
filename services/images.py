@@ -69,9 +69,11 @@ def image_to_bytes(image: Image.Image, format: str = 'JPEG') -> bytes:
 
 
 
+
 def cover_text(image_file: bytes, text: str, font_size: int) -> bytes:
     """
     Создает изображение с текстом, размещенным внизу слева, и белой полосой.
+    Добавляет размытую тень для текста и вертикальной линии.
 
     :param image_file: Байты загруженного изображения.
     :param text: Текст для наложения.
@@ -79,23 +81,19 @@ def cover_text(image_file: bytes, text: str, font_size: int) -> bytes:
     :return: Байты результирующего изображения.
     """
     # Загружаем изображение из байтов
-    image = Image.open(BytesIO(image_file))
-
-    # Создаем объект для рисования на изображении
+    image = Image.open(BytesIO(image_file)).convert("RGBA")  # Конвертируем в RGBA для работы с прозрачностью
     draw = ImageDraw.Draw(image)
 
-    # Загружаем шрифт (убедитесь, что шрифт доступен в системе)
+    # Загружаем шрифт
     font_path = "arial-bold_tt.ttf"
-
     try:
         font = ImageFont.truetype(font_path, size=font_size)
     except IOError:
         # Если шрифт не найден, используем стандартный
         font = ImageFont.load_default()
 
-    # Разбиваем текст на строки, если он содержит переносы
+    # Разбиваем текст на строки
     lines = text.split("\n")
-    # print("Lines are:", lines)
 
     # Вычисляем размеры текста
     line_heights = []
@@ -116,19 +114,48 @@ def cover_text(image_file: bytes, text: str, font_size: int) -> bytes:
     padding_left = line_weight + 33  # Отступ слева
     padding_bottom = 251  # Отступ снизу
     text_x = padding_left + 40  # Отступ текста от полосы
-    text_y = image.height - total_text_height - padding_bottom  # Позиция текста по вертикали
+    text_y = image.height - total_text_height - padding_bottom - 40  # Позиция текста по вертикали
 
-    # Рисуем белую полосу
+    # Параметры тени
+    shadow_offset = 15  # Смещение тени (в пикселях)
+    shadow_blur_radius = 3  # Радиус размытия тени
+    shadow_color = (0, 0, 0, 192)  # Цвет тени (черный с прозрачностью 50%)
+
+    # Создаем временное изображение для тени текста и линии
+    shadow_image = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    shadow_draw = ImageDraw.Draw(shadow_image)
+
+    # Рисуем тень для вертикальной линии
+    stripe_x1 = padding_left + shadow_offset
+    stripe_x2 = stripe_x1 + line_weight
+    stripe_y1 = text_y + shadow_offset
+    stripe_y2 = image.height - padding_bottom + shadow_offset
+    shadow_draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill=shadow_color)
+
+    # Рисуем тень для текста
+    temp_text_y = text_y + shadow_offset
+    for line in lines:
+        shadow_draw.text((text_x + shadow_offset, temp_text_y), line, font=font, fill=shadow_color)
+        temp_text_y += line_heights[lines.index(line)] + 5  # Переход на следующую строку
+
+    # Применяем размытие к теням
+    shadow_image = shadow_image.filter(ImageFilter.GaussianBlur(shadow_blur_radius))
+
+    # Накладываем размытую тень на основное изображение
+    image.paste(shadow_image, (0, 0), shadow_image)
+
+    # Рисуем белую полосу (основная линия)
     stripe_x1 = padding_left
-    stripe_x2 = padding_left + line_weight  # Ширина полосы
+    stripe_x2 = stripe_x1 + line_weight
     stripe_y1 = text_y
     stripe_y2 = image.height - padding_bottom
     draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill="white")
-    # Добавляем текст на изображение
-    for line in lines:
-        draw.text((text_x, text_y), line, font=font, fill="white")  # fill - цвет текста
-        text_y += line_heights[lines.index(line)] + 5  # Переход на следующую строку
 
+    # Рисуем основной текст
+    temp_text_y = text_y
+    for line in lines:
+        draw.text((text_x, temp_text_y), line, font=font, fill="white")  # fill - цвет текста
+        temp_text_y += line_heights[lines.index(line)] + 5  # Переход на следующую строку
 
     # Сохраняем результат в байты
     output = BytesIO()
