@@ -9,7 +9,7 @@ from aiogram.types import InputFile, InlineKeyboardMarkup, InlineKeyboardButton
 # from aiogram.utils import executor
 from config import BOT_TOKEN
 from router import router
-from services.images import render
+from services.images import cover_text
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
