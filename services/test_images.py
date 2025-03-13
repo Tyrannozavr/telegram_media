@@ -3,7 +3,7 @@ from interactors.images import image_instagram_process_interactor
 
 
 def test_cover_text():
-    with open('img_1.png', 'rb') as f:
+    with open('img1.PNG', 'rb') as f:
         image_bytes = f.read()
         test_text = (
             "Инал Тасоев и Мадина Таймазова выступят на тбилисском «Большом шлеме»"

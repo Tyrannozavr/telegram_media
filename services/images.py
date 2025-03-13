@@ -27,7 +27,11 @@ class ImageResizeProcess:
             right = (width + height) / 2
             bottom = height
             image = image.crop((left, top, right, bottom))
+            # print("if")
+            # image = image.resize((width, height*3), Image.Resampling.LANCZOS)
+
             width, height = image.size  # Обновляем размеры после обрезки
+            # print(width, height)
 
         # Если ширина недостаточна, растягиваем изображение по ширине
         if width < target_width:
@@ -209,7 +213,7 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
     text_y = image.height - total_text_height - padding_bottom - 20  # Позиция текста по вертикали
 
     # Параметры тени
-    shadow_offset = 3  # Смещение тени (в пикселях)
+    shadow_offset = 1  # Смещение тени (в пикселях)
     shadow_blur_radius = 7  # Радиус размытия тени
     shadow_color = (0, 0, 0, 255)
 
@@ -224,8 +228,8 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
     stripe_y2 = image.height - padding_bottom + shadow_offset
     shadow_draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill=shadow_color)
 
-    text_line_interval = 8
-
+    text_line_interval = 11
+    "test"
     # Рисуем тень для текста
     temp_text_y = text_y + shadow_offset
     for line in lines:
