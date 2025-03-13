@@ -6,7 +6,7 @@ from PIL import Image, ImageFilter, ImageEnhance
 from PIL import ImageDraw, ImageFont
 from PIL.ImageFile import ImageFile
 
-from config import FONTS_DIR
+from config import FONTS_DIR, IMAGES_DIR
 
 
 def image_to_bytes(self, image: Image.Image, image_format: str = 'JPEG') -> bytes:
@@ -334,6 +334,14 @@ class ImageBuilder:
         # Накладываем размытую часть на исходное изображение с использованием маски
         result = Image.composite(blurred_image, image, mask)
         self._image = result
+        return self
+
+    def add_water_mark(self, pattern: Image.Image = Image.open(IMAGES_DIR / "pattern.png")):
+        image = self._image.convert("RGBA")
+        width, height = image.size
+        pattern = pattern.resize((width, height))
+        image = Image.alpha_composite(image, pattern)
+        self._image = image.convert("RGB")
         return self
 
     @staticmethod
