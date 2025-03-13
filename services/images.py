@@ -1,4 +1,5 @@
 import io
+from abc import ABC, abstractmethod
 from io import BytesIO
 
 from PIL import Image, ImageFilter, ImageEnhance
@@ -7,6 +8,15 @@ from PIL.ImageFile import ImageFile
 
 from config import FONTS_DIR
 
+
+def image_to_bytes(self, image: Image.Image, image_format: str = 'JPEG') -> bytes:
+    # Если изображение в режиме RGBA, преобразуем его в RGB
+    if image.mode == 'RGBA':
+        image = image.convert('RGB')
+    img_byte_arr = io.BytesIO()  # Создаем байтовый поток
+    image.save(img_byte_arr, format=image_format)  # Сохраняем изображение в поток
+    img_byte_arr.seek(0)  # Перемещаем указатель в начало потока
+    return img_byte_arr.getvalue()  # Возвращаем байты
 
 class ImageResizeProcess:
     @staticmethod
@@ -18,70 +28,70 @@ class ImageResizeProcess:
         target_width, target_height = 2000, 2500
 
         # Определяем соотношение сторон исходного изображения
-        width, height = image.size
-        aspect_ratio = width / height
-
-        # Если изображение прямоугольное (ширина больше высоты), обрезаем его до квадрата
-        if width > height:
-            # Вычисляем координаты для обрезки до квадрата
-            left = (width - height) / 2
-            top = 0
-            right = (width + height) / 2
-            bottom = height
-            image = image.crop((left, top, right, bottom))
-            # print("if")
-            # image = image.resize((width, height*3), Image.Resampling.LANCZOS)
-
-            width, height = image.size  # Обновляем размеры после обрезки
-            # print(width, height)
-
-        # Если ширина недостаточна, растягиваем изображение по ширине
-        if width < target_width:
-            # Масштабируем изображение до ширины 2000
-            new_width = target_width
-            new_height = int(new_width / aspect_ratio)
-            resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-        else:
-            # Если ширина достаточна, масштабируем по высоте
-            new_height = target_height
-            new_width = int(new_height * aspect_ratio)
-            resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-
-        # Если высота недостаточна, добавляем зеркальное отражение, размытие и затемнение
-        if resized_image.height < target_height:
-            # Создаем новое изображение с высотой 2500
-            final_image = Image.new('RGB', (resized_image.width, target_height), (0, 0, 0))
-            final_image.paste(resized_image, (0, 0))
-
-            # Зеркально отражаем изображение вниз
-            mirrored_image = resized_image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
-
-            # # Размываем зеркальную часть
-            # blurred_mirrored = mirrored_image.filter(ImageFilter.GaussianBlur(20))
-
-            # Затемняем зеркальную часть
-            # enhancer = ImageEnhance.Brightness(blurred_mirrored)
-            # darkened_mirrored = enhancer.enhance(0.5)  # Уменьшаем яркость на 50%
-
-            # Вставляем затемнённую и размытую зеркальную часть
-            final_image.paste(mirrored_image, (0, resized_image.height))
-            final_image = ImageResizeProcess._blur_image(final_image)
-
-        else:
-            final_image = resized_image
-
-        # Если ширина или высота превышают целевые, обрезаем изображение
-        if final_image.width > target_width or final_image.height > target_height:
-            left = (final_image.width - target_width) / 2
-            top = (final_image.height - target_height) / 2
-            right = (final_image.width + target_width) / 2
-            bottom = (final_image.height + target_height) / 2
-            final_image = final_image.crop((left, top, right, bottom))
-
-        with open("/home/user/PycharmProjects/Telegram/storage/pattern.png", "rb") as pattern_file:
-            pattern = Image.open(pattern_file)
-            final_image = ImageResizeProcess._add_pattern(image=final_image, pattern=pattern)
-        return final_image
+        # width, height = image.size
+        # aspect_ratio = width / height
+        #
+        # # Если изображение прямоугольное (ширина больше высоты), обрезаем его до квадрата
+        # if width > height:
+        #     # Вычисляем координаты для обрезки до квадрата
+        #     left = (width - height) / 2
+        #     top = 0
+        #     right = (width + height) / 2
+        #     bottom = height
+        #     image = image.crop((left, top, right, bottom))
+        #     # print("if")
+        #     # image = image.resize((width, height*3), Image.Resampling.LANCZOS)
+        #
+        #     width, height = image.size  # Обновляем размеры после обрезки
+        #     # print(width, height)
+        #
+        # # Если ширина недостаточна, растягиваем изображение по ширине
+        # if width < target_width:
+        #     # Масштабируем изображение до ширины 2000
+        #     new_width = target_width
+        #     new_height = int(new_width / aspect_ratio)
+        #     resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        # else:
+        #     # Если ширина достаточна, масштабируем по высоте
+        #     new_height = target_height
+        #     new_width = int(new_height * aspect_ratio)
+        #     resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        #
+        # # Если высота недостаточна, добавляем зеркальное отражение, размытие и затемнение
+        # if resized_image.height < target_height:
+        #     # Создаем новое изображение с высотой 2500
+        #     final_image = Image.new('RGB', (resized_image.width, target_height), (0, 0, 0))
+        #     final_image.paste(resized_image, (0, 0))
+        #
+        #     # Зеркально отражаем изображение вниз
+        #     mirrored_image = resized_image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+        #
+        #     # # Размываем зеркальную часть
+        #     # blurred_mirrored = mirrored_image.filter(ImageFilter.GaussianBlur(20))
+        #
+        #     # Затемняем зеркальную часть
+        #     # enhancer = ImageEnhance.Brightness(blurred_mirrored)
+        #     # darkened_mirrored = enhancer.enhance(0.5)  # Уменьшаем яркость на 50%
+        #
+        #     # Вставляем затемнённую и размытую зеркальную часть
+        #     final_image.paste(mirrored_image, (0, resized_image.height))
+        #     final_image = ImageResizeProcess._blur_image(final_image)
+        #
+        # else:
+        #     final_image = resized_image
+        #
+        # # Если ширина или высота превышают целевые, обрезаем изображение
+        # if final_image.width > target_width or final_image.height > target_height:
+        #     left = (final_image.width - target_width) / 2
+        #     top = (final_image.height - target_height) / 2
+        #     right = (final_image.width + target_width) / 2
+        #     bottom = (final_image.height + target_height) / 2
+        #     final_image = final_image.crop((left, top, right, bottom))
+        #
+        # with open("/home/user/PycharmProjects/Telegram/storage/pattern.png", "rb") as pattern_file:
+        #     pattern = Image.open(pattern_file)
+        #     final_image = ImageResizeProcess._add_pattern(image=final_image, pattern=pattern)
+        # return final_image
 
     @staticmethod
     def _add_pattern(image: Image.Image, pattern: Image.Image) -> Image.Image:
@@ -156,15 +166,7 @@ class ImageResizeProcess:
 
         return result
 
-# Преобразуем изображение в байты
-def image_to_bytes(image: Image.Image, format: str = 'JPEG') -> bytes:
-    # Если изображение в режиме RGBA, преобразуем его в RGB
-    if image.mode == 'RGBA':
-        image = image.convert('RGB')
-    img_byte_arr = io.BytesIO()  # Создаем байтовый поток
-    image.save(img_byte_arr, format=format)  # Сохраняем изображение в поток
-    img_byte_arr.seek(0)  # Перемещаем указатель в начало потока
-    return img_byte_arr.getvalue()  # Возвращаем байты
+
 
 
 def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@northossetia") -> bytes:
@@ -264,3 +266,103 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
     output.seek(0)
 
     return output.getvalue()
+
+
+class ImageBuilder:
+    def __init__(self, image: Image.Image):
+        self._image = image
+        self.result = image.copy()
+
+
+    def resize_image(self, target_width: int = 2000, target_height: int = 2500) -> "ImageBuilder":
+        image = self._image
+        width, height = image.size
+        aspect_ratio = width / height
+
+        # Если изображение прямоугольное (ширина больше высоты), обрезаем его до квадрата
+        if width > height:
+            # Вычисляем координаты для обрезки до квадрата
+            left = (width - height) / 2
+            top = 0
+            right = (width + height) / 2
+            bottom = height
+            image = image.crop((left, top, right, bottom))
+            # print("if")
+            # image = image.resize((width, height*3), Image.Resampling.LANCZOS)
+
+            width, height = image.size  # Обновляем размеры после обрезки
+            # print(width, height)
+
+        # Если ширина недостаточна, растягиваем изображение по ширине
+        if width < target_width:
+            # Масштабируем изображение до ширины 2000
+            new_width = target_width
+            new_height = int(new_width / aspect_ratio)
+            resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        else:
+            # Если ширина достаточна, масштабируем по высоте
+            new_height = target_height
+            new_width = int(new_height * aspect_ratio)
+            resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+        # Если высота недостаточна, добавляем зеркальное отражение, размытие и затемнение
+        if resized_image.height < target_height:
+            # Создаем новое изображение с высотой 2500
+            final_image = Image.new('RGB', (resized_image.width, target_height), (0, 0, 0))
+            final_image.paste(resized_image, (0, 0))
+
+            # Зеркально отражаем изображение вниз
+            mirrored_image = resized_image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+
+            # Вставляем затемнённую и размытую зеркальную часть
+            final_image.paste(mirrored_image, (0, resized_image.height))
+        else:
+            final_image = resized_image
+        self._image = final_image
+        return self
+
+    @staticmethod
+    def image_to_bytes(image: Image.Image, image_format: str = 'JPEG') -> bytes:
+        # Если изображение в режиме RGBA, преобразуем его в RGB
+        if image.mode == 'RGBA':
+            image = image.convert('RGB')
+        img_byte_arr = io.BytesIO()  # Создаем байтовый поток
+        image.save(img_byte_arr, format=image_format)  # Сохраняем изображение в поток
+        img_byte_arr.seek(0)  # Перемещаем указатель в начало потока
+        return img_byte_arr.getvalue()  # Возвращаем байты
+
+    def build(self) -> Image:
+        return self._image
+
+
+# class ImageProcessor(ABC):
+#     @abstractmethod
+#     def process(self) -> bytes:
+#         pass
+#
+    # def image_to_bytes(self, image: Image.Image, image_format: str = 'JPEG') -> bytes:
+    #     # Если изображение в режиме RGBA, преобразуем его в RGB
+    #     if image.mode == 'RGBA':
+    #         image = image.convert('RGB')
+    #     img_byte_arr = io.BytesIO()  # Создаем байтовый поток
+    #     image.save(img_byte_arr, format=image_format)  # Сохраняем изображение в поток
+    #     img_byte_arr.seek(0)  # Перемещаем указатель в начало потока
+    #     return img_byte_arr.getvalue()  # Возвращаем байты
+#
+#
+#
+# class ImageResizeProcessor(ImageProcessor):
+#     def __init__(self, target_width: int = 2000, target_height: int = 2500):
+#         """
+#         :param target_width: width output image
+#         :param target_height: height output image
+#         """
+#         self.target_width = target_width
+#         self.target_height = target_height
+#
+#     def process(self) -> bytes:
+#         pass
+#
+# class ImageWaterMarkProcess:
+#     def __init__(self):
+#         pass
