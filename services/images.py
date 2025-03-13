@@ -59,10 +59,8 @@ class ImageResizeProcess:
 
             # Вставляем затемнённую и размытую зеркальную часть
             final_image.paste(mirrored_image, (0, resized_image.height))
-            blured_image = ImageResizeProcess._blur_image(final_image)
-            with open("/home/user/PycharmProjects/Telegram/storage/pattern.png", "rb") as pattern_file:
-                pattern = Image.open(pattern_file)
-                final_image = ImageResizeProcess._add_pattern(image=blured_image, pattern=pattern)
+            final_image = ImageResizeProcess._blur_image(final_image)
+
         else:
             final_image = resized_image
 
@@ -74,6 +72,9 @@ class ImageResizeProcess:
             bottom = (final_image.height + target_height) / 2
             final_image = final_image.crop((left, top, right, bottom))
 
+        with open("/home/user/PycharmProjects/Telegram/storage/pattern.png", "rb") as pattern_file:
+            pattern = Image.open(pattern_file)
+            final_image = ImageResizeProcess._add_pattern(image=final_image, pattern=pattern)
         return final_image
 
     @staticmethod
@@ -118,14 +119,14 @@ class ImageResizeProcess:
 
         # Применяем полное размытие к нижним 500px
         bottom_part = blurred_image.crop((0, height - 500, width, height))
-        bottom_part = bottom_part.filter(ImageFilter.GaussianBlur(radius=20))  # Сильное размытие
+        bottom_part = bottom_part.filter(ImageFilter.GaussianBlur(radius=10))  # Сильное размытие
         blurred_image.paste(bottom_part, (0, height - 500))
 
         # Применяем градиентное размытие к диапазону 500–550px
         for y in range(height - 550, height - 500):
             # Вычисляем коэффициент размытия (от 0 до 1)
             blur_strength = (y - (height - 550)) / 50  # Градиент от 0 до 1
-            radius = int(20 * blur_strength)  # Радиус размытия зависит от положения
+            radius = int(10 * blur_strength)  # Радиус размытия зависит от положения
 
             # Вырезаем строку и применяем размытие
             row = blurred_image.crop((0, y, width, y + 1))
@@ -151,6 +152,9 @@ class ImageResizeProcess:
 
 # Преобразуем изображение в байты
 def image_to_bytes(image: Image.Image, format: str = 'JPEG') -> bytes:
+    # Если изображение в режиме RGBA, преобразуем его в RGB
+    if image.mode == 'RGBA':
+        image = image.convert('RGB')
     img_byte_arr = io.BytesIO()  # Создаем байтовый поток
     image.save(img_byte_arr, format=format)  # Сохраняем изображение в поток
     img_byte_arr.seek(0)  # Перемещаем указатель в начало потока
@@ -206,7 +210,7 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
 
     # Параметры тени
     shadow_offset = 10  # Смещение тени (в пикселях)
-    shadow_blur_radius = 4  # Радиус размытия тени
+    shadow_blur_radius = 7  # Радиус размытия тени
     shadow_color = (0, 0, 0, 255)
 
     # Создаем временное изображение для тени текста и линии
@@ -216,7 +220,7 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
     # Рисуем тень для вертикальной линии
     stripe_x1 = padding_left + shadow_offset
     stripe_x2 = stripe_x1 + line_weight
-    stripe_y1 = text_y + shadow_offset
+    stripe_y1 = text_y + shadow_offset - 30
     stripe_y2 = image.height - padding_bottom + shadow_offset
     shadow_draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill=shadow_color)
 
@@ -234,20 +238,10 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
     image = Image.alpha_composite(image, shadow_image)
     draw = ImageDraw.Draw(image)
 
-    # # Накладываем размытую тень на основное изображение
-    # combined_image = Image.alpha_composite(base_image, shadow_image)
-    #
-    # # Создаем объект для рисования на комбинированном изображении
-    # draw = ImageDraw.Draw(combined_image)
-    #
-    # # Рисуем текст на комбинированном изображении
-    # for i, line in enumerate(text_lines):
-    #     draw.text((text_position[0], text_position[1] + i * line_height), line, font=font, fill="white")
-    #
     # Рисуем белую полосу (основная линия)
     stripe_x1 = padding_left
     stripe_x2 = stripe_x1 + line_weight
-    stripe_y1 = text_y
+    stripe_y1 = text_y - 30
     stripe_y2 = image.height - padding_bottom
     draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill="white")
 
@@ -256,9 +250,9 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
     # bbox = draw.textbbox((0, 0), logo, font=logo_font)
     # additional_text_width = bbox[2] - bbox[0]
     # additional_text_height = bbox[3] - bbox[1]
-
+    # font_size
     # Рисуем основной текст
-    temp_text_y = text_y
+    temp_text_y = round(text_y - font_size / 5)
     for line in lines:
         draw.text((text_x, temp_text_y), line, font=font, fill="white")  # fill - цвет текста
         temp_text_y += line_heights[lines.index(line)] + 5  # Переход на следующую строку

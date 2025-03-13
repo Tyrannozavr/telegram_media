@@ -7,6 +7,7 @@ def wrap_text(text: str, width: int = 32) -> str:
     :param width: Максимальная ширина строки (по умолчанию 32 символа).
     :return: Текст с переносами строк.
     """
+
     words = text.split(' ')  # Разбиваем текст на слова
     wrapped_text = []  # Список для хранения строк
     current_line = ''  # Текущая строка
@@ -39,7 +40,7 @@ def wrap_text(text: str, width: int = 32) -> str:
 
 from PIL import ImageFont, ImageDraw
 
-def calculate_characters_width(font_size: int, reference_font_size: int = 100, reference_width: int = 32) -> int:
+def calculate_characters_width(font_size: int, reference_font_size: int = 100, reference_width: int = 28) -> int:
     """
     Рассчитывает количество символов, которые поместятся в строку, на основе размера шрифта.
 

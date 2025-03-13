@@ -6,9 +6,7 @@ def test_cover_text():
     with open('img.png', 'rb') as f:
         image_bytes = f.read()
         test_text = (
-            "Это пример текста, который нужно ограничить по ширине в 32 символа. "
-            "Он содержит длинные слова, такие как 'саморазвитие' и 'высокотехнологичный', "
-            "а также короткие слова."
+            "Инал тасоев и мадина таймазова выступят на тбилисском большом шлеме"
         )
         result = image_instagram_process_interactor(image_bytes, test_text, 100)
     with open('result.png', 'wb') as f:
