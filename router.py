@@ -1,12 +1,10 @@
-from io import BytesIO
-
-from aiogram.types import Message, input_file, input_media, InputFile, BufferedInputFile
+from aiogram.types import Message, BufferedInputFile
 
 from aiogram import Router, Bot
 from aiogram.filters import CommandStart
+from aiogram.types import Message, BufferedInputFile
 
-from services.images import cover_text, process_image, image_to_bytes
-from services.text import wrap_text, calculate_characters_width
+from interactors.images import image_instagram_process_interactor
 
 router = Router()
 
@@ -27,14 +25,15 @@ async def handle_file(message: Message, bot: Bot):
     file_bytes = await bot.download_file(file.file_path)
     # Получаем текст из подписи (caption)
     font_size = 100
-    text_width = calculate_characters_width(font_size=font_size)
-    text = wrap_text(message.caption, text_width) or "Пример текста"
-
-    # Рендерим изображение с текстом
-    image_resized = process_image(file_bytes.read())
-    # image_bytes_resized = image_resized.tobytes()
-    image_bytes_resized = image_to_bytes(image_resized)
-    result_image = cover_text(image_bytes_resized, text, font_size=font_size)
+    result_image = image_instagram_process_interactor(file_bytes.read(),  message.caption, font_size)
+    # text_width = calculate_characters_width(font_size=font_size)
+    # text = wrap_text(message.caption, text_width) or "Пример текста"
+    #
+    # # Рендерим изображение с текстом
+    # image_resized = process_image(file_bytes.read())
+    # # image_bytes_resized = image_resized.tobytes()
+    # image_bytes_resized = image_to_bytes(image_resized)
+    # result_image = cover_text(image_bytes_resized, text, font_size=font_size)
 
     result_file = BufferedInputFile(result_image, filename="result.png")
     await message.answer_document(result_file)

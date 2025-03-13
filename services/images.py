@@ -60,7 +60,7 @@ class ImageResizeProcess:
             # Вставляем затемнённую и размытую зеркальную часть
             final_image.paste(mirrored_image, (0, resized_image.height))
             blured_image = ImageResizeProcess._blur_image(final_image)
-            with open("pattern.png", "rb") as pattern_file:
+            with open("/home/user/PycharmProjects/Telegram/storage/pattern.png", "rb") as pattern_file:
                 pattern = Image.open(pattern_file)
                 final_image = ImageResizeProcess._add_pattern(image=blured_image, pattern=pattern)
         else:
