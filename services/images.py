@@ -1,15 +1,13 @@
 import io
-from abc import ABC, abstractmethod
 from io import BytesIO
 
-from PIL import Image, ImageFilter, ImageEnhance
+from PIL import Image, ImageFilter
 from PIL import ImageDraw, ImageFont
-from PIL.ImageFile import ImageFile
 
 from config import FONTS_DIR, IMAGES_DIR
 
 
-def image_to_bytes(self, image: Image.Image, image_format: str = 'JPEG') -> bytes:
+def image_to_bytes(image: Image.Image, image_format: str = 'JPEG') -> bytes:
     # Если изображение в режиме RGBA, преобразуем его в RGB
     if image.mode == 'RGBA':
         image = image.convert('RGB')
@@ -17,6 +15,7 @@ def image_to_bytes(self, image: Image.Image, image_format: str = 'JPEG') -> byte
     image.save(img_byte_arr, format=image_format)  # Сохраняем изображение в поток
     img_byte_arr.seek(0)  # Перемещаем указатель в начало потока
     return img_byte_arr.getvalue()  # Возвращаем байты
+
 
 class ImageResizeProcess:
     @staticmethod
@@ -118,7 +117,6 @@ class ImageResizeProcess:
 
         return result
 
-
     @staticmethod
     def _blur_image(image: Image.Image) -> Image.Image:
         """
@@ -165,8 +163,6 @@ class ImageResizeProcess:
         result = Image.composite(blurred_image, image, mask)
 
         return result
-
-
 
 
 def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@northossetia") -> bytes:
@@ -259,7 +255,6 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
         draw.text((text_x, temp_text_y), line, font=font, fill="white")  # fill - цвет текста
         temp_text_y += line_heights[lines.index(line)] + text_line_interval  # Переход на следующую строку
 
-
     # Сохраняем результат в байты
     output = BytesIO()
     image.save(output, format="PNG")
@@ -272,7 +267,6 @@ class ImageBuilder:
     def __init__(self, image: Image.Image):
         self._image = image
         self.result = image.copy()
-
 
     def resize_image(self, target_width: int = 2000, target_height: int = 2500) -> "ImageBuilder":
         image = self._image
@@ -290,10 +284,11 @@ class ImageBuilder:
 
         if image.width == image.height:
             # если квадрат (или был прямоугольником, но обрезали до квадрата)
-            resized_image = image.resize((target_width, int(target_width*1.125)), Image.Resampling.LANCZOS)
+            resized_image = image.resize((target_width, int(target_width * 1)), Image.Resampling.LANCZOS)
+            # resized_image = image.resize((target_width, int(target_width*1.125)), Image.Resampling.LANCZOS)
             # image 2000 * 2250
             final_image = Image.new("RGB", (target_width, target_height), (0, 0, 0))
-            final_image.paste(resized_image, (0, 0) )
+            final_image.paste(resized_image, (0, 0))
 
             mirrored_image = resized_image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
             final_image.paste(mirrored_image, (0, resized_image.height))
@@ -303,7 +298,6 @@ class ImageBuilder:
             final_image = resized_image
         self._image = final_image
         return self
-
 
     def blur_image(self, blur_top: int = 500, radius: int = 10):
         image = self._image
@@ -358,34 +352,175 @@ class ImageBuilder:
         return self._image
 
 
-# class ImageProcessor(ABC):
-#     @abstractmethod
-#     def process(self) -> bytes:
-#         pass
-#
-    # def image_to_bytes(self, image: Image.Image, image_format: str = 'JPEG') -> bytes:
-    #     # Если изображение в режиме RGBA, преобразуем его в RGB
-    #     if image.mode == 'RGBA':
-    #         image = image.convert('RGB')
-    #     img_byte_arr = io.BytesIO()  # Создаем байтовый поток
-    #     image.save(img_byte_arr, format=image_format)  # Сохраняем изображение в поток
-    #     img_byte_arr.seek(0)  # Перемещаем указатель в начало потока
-    #     return img_byte_arr.getvalue()  # Возвращаем байты
-#
-#
-#
-# class ImageResizeProcessor(ImageProcessor):
-#     def __init__(self, target_width: int = 2000, target_height: int = 2500):
-#         """
-#         :param target_width: width output image
-#         :param target_height: height output image
-#         """
-#         self.target_width = target_width
-#         self.target_height = target_height
-#
-#     def process(self) -> bytes:
-#         pass
-#
-# class ImageWaterMarkProcess:
-#     def __init__(self):
-#         pass
+class ImageTextBuilder:
+    def __init__(self, image: Image.Image, text: str, font_size: int = 100, reference_font_size: int = 100,
+                 reference_width: int = 28, font_path: str = FONTS_DIR / "arial-bold_tt.ttf"):
+        """
+
+        :param image:
+        :param text:
+        :param font_size:
+        :param reference_width: Количество символов допустимое на строке при заданной ширине reference_font_size
+        :param reference_font_size: Шрифт для определения максимальной ширины строки
+        """
+        self._image = image
+        self.result = image.copy()
+        self.text = text
+        self.font_size = font_size
+        self.reference_width = reference_width
+        self.reference_font_size = reference_font_size
+        # Загружаем шрифт
+        try:
+            self.font = ImageFont.truetype(font_path, size=font_size)
+        except IOError:
+            # Если шрифт не найден, используем стандартный
+            self.font = ImageFont.load_default()
+
+    def _calculate_characters_width(self) -> int:
+        """
+        Рассчитывает количество символов, которые поместятся в строку, на основе размера шрифта.
+
+        :param font_size: Размер шрифта, для которого нужно рассчитать количество символов.
+        :param reference_font_size: Эталонный размер шрифта (по умолчанию 100).
+        :param reference_width: Количество символов при эталонном размере шрифта (по умолчанию 28).
+        :return: Количество символов, которые поместятся в строку.
+        """
+        # Используем пропорцию для расчета
+        # Ширина текста пропорциональна размеру шрифта
+        new_width = (self.reference_width * self.font_size) / self.reference_font_size
+        return int(new_width)
+
+    def _split_text(self, text: str, width: int) -> str:
+        """
+        Ограничивает текст по ширине, добавляя переносы строк.
+        Старается не разбивать слова, но если это необходимо, добавляет символ переноса "-".
+
+        :param text: Входной текст.
+        :param width: Максимальная ширина строки (по умолчанию равна reference font size).
+        :return: Текст с переносами строк.
+        """
+        if width is None:
+            width = self.reference_width
+
+        words = text.split(' ')  # Разбиваем текст на слова
+        wrapped_text = []  # Список для хранения строк
+        current_line = ''  # Текущая строка
+
+        for word in words:
+            # Если добавление слова не превышает лимит
+            if len(current_line) + len(word) <= width:
+                current_line += word + ' '
+            else:
+                # Если слово слишком длинное и не помещается в строку
+                if len(word) > width:
+                    # Разбиваем слово на части
+                    while len(word) > width:
+                        # Добавляем часть слова и символ переноса
+                        wrapped_text.append(current_line + word[:width - 1] + '-')
+                        word = word[width - 1:]  # Оставшаяся часть слова
+                        current_line = ''
+                    current_line = word + ' '
+                else:
+                    # Если слово не помещается, завершаем текущую строку и начинаем новую
+                    wrapped_text.append(current_line.rstrip())
+                    current_line = word + ' '
+
+        # Добавляем последнюю строку
+        if current_line:
+            wrapped_text.append(current_line.rstrip())
+
+        return '\n'.join(wrapped_text)
+
+    def _process_text(self):
+        characters_width = self._calculate_characters_width()
+        upper_text = self.text.upper()
+        split_text = self._split_text(upper_text, characters_width)
+        text_array = split_text.split("\n")
+
+    def add_text_line_shadow(self, text_array=None, line_weight: int = 20, padding_bottom: int = 251,
+                             padding_left: int = 33, shadow_offset: int = 1, shadow_blur_radius: int = 7,
+                             shadow_color: tuple = (0, 0, 0, 255), text_color: str = "white") -> bytes:
+        """
+        Создает изображение с текстом, размещенным внизу слева, и белой полосой.
+        Добавляет размытую тень для текста и вертикальной линии.
+
+        :param text_color: Цвет текста и линии
+        :param shadow_color: Цвет тени в RGBA формате
+        :param shadow_blur_radius: Радиус размытия тени)
+        :param shadow_offset: Смещение тени (в пикселях)
+        :param padding_left:
+        :param padding_bottom:
+        :param line_weight: Ширина белой полосы
+        :param text_array: список строк, которые нужно добавить
+        :return: Байты результирующего изображения.
+        """
+        if text_array is None:
+            text_array = []
+        image = self._image
+        draw = ImageDraw.Draw(image)
+        padding_left += line_weight
+
+        # Вычисляем размеры текста
+        line_heights = []
+        max_text_width = 0
+        for line in text_array:
+            bbox = draw.textbbox((0, 0), line, font=self.font)
+            line_width = bbox[2] - bbox[0]  # Ширина строки
+            line_height = bbox[3] - bbox[1]  # Высота строки
+            line_heights.append(line_height)
+            if line_width > max_text_width:
+                max_text_width = line_width
+
+        # Общая высота текста с учетом отступов между строками
+        total_text_height = sum(line_heights) + (len(text_array) - 1) * 5  # 5px между строками
+
+        # Определяем позицию текста
+        # Отступ снизу
+        text_x = padding_left + 40  # Отступ текста от полосы
+        text_y = image.height - total_text_height - padding_bottom - 20  # Позиция текста по вертикали
+
+
+        # Создаем временное изображение для тени текста и линии
+        shadow_image = Image.new("RGBA", image.size, (0, 0, 0, 0))
+        shadow_draw = ImageDraw.Draw(shadow_image)
+
+        # Рисуем тень для вертикальной линии
+        stripe_x1 = padding_left + shadow_offset
+        stripe_x2 = stripe_x1 + line_weight
+        stripe_y1 = text_y + shadow_offset - 30
+        stripe_y2 = image.height - padding_bottom + shadow_offset
+        shadow_draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill=shadow_color)
+
+        text_line_interval = 11
+        # Рисуем тень для текста
+        temp_text_y = text_y + shadow_offset
+        for line in text_array:
+            shadow_draw.text((text_x + shadow_offset, temp_text_y), line, font=self.font, fill=shadow_color)
+            temp_text_y += line_heights[text_array.index(line)] + text_line_interval  # Переход на следующую строку
+
+        # Применяем размытие к теням
+        shadow_image = shadow_image.filter(ImageFilter.GaussianBlur(shadow_blur_radius))
+        # Накладываем размытую тень на основное изображение
+        # image.paste(shadow_image, (0, 0), shadow_image)
+
+        image = Image.alpha_composite(image, shadow_image)
+        draw = ImageDraw.Draw(image)
+
+        # Рисуем белую полосу (основная линия)
+        stripe_x1 = padding_left
+        stripe_x2 = stripe_x1 + line_weight
+        stripe_y1 = text_y - 30
+        stripe_y2 = image.height - padding_bottom
+        draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill=text_color)
+
+        temp_text_y = round(text_y - self.font_size / 5)
+        for line in text_array:
+            draw.text((text_x, temp_text_y), line, font=self.font, fill=text_color)  # fill - цвет текста
+            temp_text_y += line_heights[text_array.index(line)] + text_line_interval  # Переход на следующую строку
+
+        # Сохраняем результат в байты
+        output = BytesIO()
+        image.save(output, format="PNG")
+        output.seek(0)
+
+        return output.getvalue()

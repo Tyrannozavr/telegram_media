@@ -23,10 +23,10 @@ def test_cover_text():
 
 # test_cover_text()
 def test_image_builder():
-    with open(IMAGES_DIR / 'img1.PNG', 'rb') as f:
+    with open(IMAGES_DIR / 'test.JPG', 'rb') as f:
         image = Image.open(io.BytesIO(f.read()))
-        result = ImageBuilder(image).resize_image().blur_image().blur_gradient().add_water_mark().build()
+        resized_image = ImageBuilder(image).resize_image().blur_image().blur_gradient().add_water_mark().build()
     with open(IMAGES_DIR / 'result.png', 'wb') as f:
-        f.write(ImageBuilder.image_to_bytes(result))
+        f.write(ImageBuilder.image_to_bytes(resized_image))
 
 test_image_builder()
