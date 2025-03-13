@@ -209,7 +209,7 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
     text_y = image.height - total_text_height - padding_bottom - 20  # Позиция текста по вертикали
 
     # Параметры тени
-    shadow_offset = 10  # Смещение тени (в пикселях)
+    shadow_offset = 3  # Смещение тени (в пикселях)
     shadow_blur_radius = 7  # Радиус размытия тени
     shadow_color = (0, 0, 0, 255)
 
@@ -224,11 +224,13 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
     stripe_y2 = image.height - padding_bottom + shadow_offset
     shadow_draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill=shadow_color)
 
+    text_line_interval = 8
+
     # Рисуем тень для текста
     temp_text_y = text_y + shadow_offset
     for line in lines:
         shadow_draw.text((text_x + shadow_offset, temp_text_y), line, font=font, fill=shadow_color)
-        temp_text_y += line_heights[lines.index(line)] + 5  # Переход на следующую строку
+        temp_text_y += line_heights[lines.index(line)] + text_line_interval  # Переход на следующую строку
 
     # Применяем размытие к теням
     shadow_image = shadow_image.filter(ImageFilter.GaussianBlur(shadow_blur_radius))
@@ -255,7 +257,7 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
     temp_text_y = round(text_y - font_size / 5)
     for line in lines:
         draw.text((text_x, temp_text_y), line, font=font, fill="white")  # fill - цвет текста
-        temp_text_y += line_heights[lines.index(line)] + 5  # Переход на следующую строку
+        temp_text_y += line_heights[lines.index(line)] + text_line_interval  # Переход на следующую строку
 
     # Позиция дополнительного текста
     # additional_text_x = (image.width - additional_text_width) // 2  # Центрируем по горизонтали
