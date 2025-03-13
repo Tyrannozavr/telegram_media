@@ -304,6 +304,38 @@ class ImageBuilder:
         self._image = final_image
         return self
 
+
+    def blur_image(self, blur_top: int = 500, radius: int = 10):
+        image = self._image
+        width, height = image.size
+        bottom_part = image.crop((0, height - blur_top, width, height))
+        bottom_part = bottom_part.filter(ImageFilter.GaussianBlur(radius=radius))  # размытие
+        image.paste(bottom_part, (0, height - blur_top))
+        self._image = image
+        return self
+
+    def blur_gradient(self, blur_top: int = 500, blur_bottom: int = 550, radius: int = 10):
+        image = self._image
+        width, height = image.size
+
+        # Создаем маску для плавного перехода
+        mask = Image.new("L", (width, height), 0)  # Черная маска (прозрачная)
+        draw = ImageDraw.Draw(mask)
+
+        # Градиентная маска в диапазоне blur_top – blur_bottom
+        gradient_length = blur_bottom - blur_top
+        for y in range(height - blur_bottom, height - blur_top):
+            alpha = int(255 * ((y - (height - blur_bottom)) / gradient_length))
+            draw.rectangle((0, y, width, y + 1), fill=alpha)
+
+        # Применяем размытие ко всему изображению
+        blurred_image = image.filter(ImageFilter.GaussianBlur(radius))
+
+        # Накладываем размытую часть на исходное изображение с использованием маски
+        result = Image.composite(blurred_image, image, mask)
+        self._image = result
+        return self
+
     @staticmethod
     def image_to_bytes(image: Image.Image, image_format: str = 'JPEG') -> bytes:
         # Если изображение в режиме RGBA, преобразуем его в RGB
