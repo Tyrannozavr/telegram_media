@@ -25,7 +25,7 @@ def test_cover_text():
 def test_image_builder():
     with open(IMAGES_DIR / 'img1.PNG', 'rb') as f:
         image = Image.open(io.BytesIO(f.read()))
-        result = ImageBuilder(image).build()
+        result = ImageBuilder(image).resize_image().build()
     with open(IMAGES_DIR / 'result.png', 'wb') as f:
         f.write(ImageBuilder.image_to_bytes(result))
 

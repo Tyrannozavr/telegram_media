@@ -287,36 +287,19 @@ class ImageBuilder:
             right = (width + height) / 2
             bottom = height
             image = image.crop((left, top, right, bottom))
-            # print("if")
-            # image = image.resize((width, height*3), Image.Resampling.LANCZOS)
 
-            width, height = image.size  # Обновляем размеры после обрезки
-            # print(width, height)
+        if image.width == image.height:
+            # если квадрат (или был прямоугольником, но обрезали до квадрата)
+            resized_image = image.resize((target_width, int(target_width*1.125)), Image.Resampling.LANCZOS)
+            # image 2000 * 2250
+            final_image = Image.new("RGB", (target_width, target_height), (0, 0, 0))
+            final_image.paste(resized_image, (0, 0) )
 
-        # Если ширина недостаточна, растягиваем изображение по ширине
-        if width < target_width:
-            # Масштабируем изображение до ширины 2000
-            new_width = target_width
-            new_height = int(new_width / aspect_ratio)
-            resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-        else:
-            # Если ширина достаточна, масштабируем по высоте
-            new_height = target_height
-            new_width = int(new_height * aspect_ratio)
-            resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-
-        # Если высота недостаточна, добавляем зеркальное отражение, размытие и затемнение
-        if resized_image.height < target_height:
-            # Создаем новое изображение с высотой 2500
-            final_image = Image.new('RGB', (resized_image.width, target_height), (0, 0, 0))
-            final_image.paste(resized_image, (0, 0))
-
-            # Зеркально отражаем изображение вниз
             mirrored_image = resized_image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
-
-            # Вставляем затемнённую и размытую зеркальную часть
             final_image.paste(mirrored_image, (0, resized_image.height))
         else:
+            # Если высота больше, чем ширина растягиваем вширь
+            resized_image = image.resize((target_width, int(target_width / aspect_ratio)), Image.Resampling.LANCZOS)
             final_image = resized_image
         self._image = final_image
         return self
