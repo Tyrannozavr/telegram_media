@@ -8,5 +8,4 @@ def image_instagram_process_interactor(image: bytes, text: str, font_size: int =
     image_resized = ImageResizeProcess.process_image(image)
     image_bytes_resized = image_to_bytes(image_resized)
     output_image = cover_text(image_bytes_resized, text=text_split, font_size=font_size)
-    # output_image = image_to_bytes(image_resized)
     return output_image

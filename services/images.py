@@ -5,6 +5,8 @@ from PIL import Image, ImageFilter, ImageEnhance
 from PIL import ImageDraw, ImageFont
 from PIL.ImageFile import ImageFile
 
+from config import FONTS_DIR
+
 
 class ImageResizeProcess:
     @staticmethod
@@ -181,7 +183,7 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
     draw = ImageDraw.Draw(image)
 
     # Загружаем шрифт
-    font_path = "arial-bold_tt.ttf"
+    font_path = FONTS_DIR / "arial-bold_tt.ttf"
     try:
         font = ImageFont.truetype(font_path, size=font_size)
     except IOError:
@@ -229,7 +231,6 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
     shadow_draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill=shadow_color)
 
     text_line_interval = 11
-    "test"
     # Рисуем тень для текста
     temp_text_y = text_y + shadow_offset
     for line in lines:
@@ -251,23 +252,11 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
     stripe_y2 = image.height - padding_bottom
     draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill="white")
 
-    # logo_size = 45
-    # logo_font = ImageFont.truetype(font_path, size=logo_size)
-    # bbox = draw.textbbox((0, 0), logo, font=logo_font)
-    # additional_text_width = bbox[2] - bbox[0]
-    # additional_text_height = bbox[3] - bbox[1]
-    # font_size
-    # Рисуем основной текст
     temp_text_y = round(text_y - font_size / 5)
     for line in lines:
         draw.text((text_x, temp_text_y), line, font=font, fill="white")  # fill - цвет текста
         temp_text_y += line_heights[lines.index(line)] + text_line_interval  # Переход на следующую строку
 
-    # Позиция дополнительного текста
-    # additional_text_x = (image.width - additional_text_width) // 2  # Центрируем по горизонтали
-    # additional_text_y = image.height - additional_text_height - 70  # Отступ снизу 30px
-    #
-    # draw.text((additional_text_x, additional_text_y), logo, font=logo_font, fill=(255, 255, 255, 128))
 
     # Сохраняем результат в байты
     output = BytesIO()
