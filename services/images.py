@@ -27,70 +27,70 @@ class ImageResizeProcess:
         target_width, target_height = 2000, 2500
 
         # Определяем соотношение сторон исходного изображения
-        # width, height = image.size
-        # aspect_ratio = width / height
-        #
-        # # Если изображение прямоугольное (ширина больше высоты), обрезаем его до квадрата
-        # if width > height:
-        #     # Вычисляем координаты для обрезки до квадрата
-        #     left = (width - height) / 2
-        #     top = 0
-        #     right = (width + height) / 2
-        #     bottom = height
-        #     image = image.crop((left, top, right, bottom))
-        #     # print("if")
-        #     # image = image.resize((width, height*3), Image.Resampling.LANCZOS)
-        #
-        #     width, height = image.size  # Обновляем размеры после обрезки
-        #     # print(width, height)
-        #
-        # # Если ширина недостаточна, растягиваем изображение по ширине
-        # if width < target_width:
-        #     # Масштабируем изображение до ширины 2000
-        #     new_width = target_width
-        #     new_height = int(new_width / aspect_ratio)
-        #     resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-        # else:
-        #     # Если ширина достаточна, масштабируем по высоте
-        #     new_height = target_height
-        #     new_width = int(new_height * aspect_ratio)
-        #     resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-        #
-        # # Если высота недостаточна, добавляем зеркальное отражение, размытие и затемнение
-        # if resized_image.height < target_height:
-        #     # Создаем новое изображение с высотой 2500
-        #     final_image = Image.new('RGB', (resized_image.width, target_height), (0, 0, 0))
-        #     final_image.paste(resized_image, (0, 0))
-        #
-        #     # Зеркально отражаем изображение вниз
-        #     mirrored_image = resized_image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
-        #
-        #     # # Размываем зеркальную часть
-        #     # blurred_mirrored = mirrored_image.filter(ImageFilter.GaussianBlur(20))
-        #
-        #     # Затемняем зеркальную часть
-        #     # enhancer = ImageEnhance.Brightness(blurred_mirrored)
-        #     # darkened_mirrored = enhancer.enhance(0.5)  # Уменьшаем яркость на 50%
-        #
-        #     # Вставляем затемнённую и размытую зеркальную часть
-        #     final_image.paste(mirrored_image, (0, resized_image.height))
-        #     final_image = ImageResizeProcess._blur_image(final_image)
-        #
-        # else:
-        #     final_image = resized_image
-        #
-        # # Если ширина или высота превышают целевые, обрезаем изображение
-        # if final_image.width > target_width or final_image.height > target_height:
-        #     left = (final_image.width - target_width) / 2
-        #     top = (final_image.height - target_height) / 2
-        #     right = (final_image.width + target_width) / 2
-        #     bottom = (final_image.height + target_height) / 2
-        #     final_image = final_image.crop((left, top, right, bottom))
-        #
-        # with open("/home/user/PycharmProjects/Telegram/storage/pattern.png", "rb") as pattern_file:
-        #     pattern = Image.open(pattern_file)
-        #     final_image = ImageResizeProcess._add_pattern(image=final_image, pattern=pattern)
-        # return final_image
+        width, height = image.size
+        aspect_ratio = width / height
+
+        # Если изображение прямоугольное (ширина больше высоты), обрезаем его до квадрата
+        if width > height:
+            # Вычисляем координаты для обрезки до квадрата
+            left = (width - height) / 2
+            top = 0
+            right = (width + height) / 2
+            bottom = height
+            image = image.crop((left, top, right, bottom))
+            # print("if")
+            # image = image.resize((width, height*3), Image.Resampling.LANCZOS)
+
+            width, height = image.size  # Обновляем размеры после обрезки
+            # print(width, height)
+
+        # Если ширина недостаточна, растягиваем изображение по ширине
+        if width < target_width:
+            # Масштабируем изображение до ширины 2000
+            new_width = target_width
+            new_height = int(new_width / aspect_ratio)
+            resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        else:
+            # Если ширина достаточна, масштабируем по высоте
+            new_height = target_height
+            new_width = int(new_height * aspect_ratio)
+            resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+        # Если высота недостаточна, добавляем зеркальное отражение, размытие и затемнение
+        if resized_image.height < target_height:
+            # Создаем новое изображение с высотой 2500
+            final_image = Image.new('RGB', (resized_image.width, target_height), (0, 0, 0))
+            final_image.paste(resized_image, (0, 0))
+
+            # Зеркально отражаем изображение вниз
+            mirrored_image = resized_image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+
+            # # Размываем зеркальную часть
+            # blurred_mirrored = mirrored_image.filter(ImageFilter.GaussianBlur(20))
+
+            # Затемняем зеркальную часть
+            # enhancer = ImageEnhance.Brightness(blurred_mirrored)
+            # darkened_mirrored = enhancer.enhance(0.5)  # Уменьшаем яркость на 50%
+
+            # Вставляем затемнённую и размытую зеркальную часть
+            final_image.paste(mirrored_image, (0, resized_image.height))
+            final_image = ImageResizeProcess._blur_image(final_image)
+
+        else:
+            final_image = resized_image
+
+        # Если ширина или высота превышают целевые, обрезаем изображение
+        if final_image.width > target_width or final_image.height > target_height:
+            left = (final_image.width - target_width) / 2
+            top = (final_image.height - target_height) / 2
+            right = (final_image.width + target_width) / 2
+            bottom = (final_image.height + target_height) / 2
+            final_image = final_image.crop((left, top, right, bottom))
+
+        with open("/home/user/PycharmProjects/Telegram/storage/pattern.png", "rb") as pattern_file:
+            pattern = Image.open(pattern_file)
+            final_image = ImageResizeProcess._add_pattern(image=final_image, pattern=pattern)
+        return final_image
 
     @staticmethod
     def _add_pattern(image: Image.Image, pattern: Image.Image) -> Image.Image:
@@ -265,8 +265,7 @@ def cover_text(image_file: bytes, text: str, font_size: int, logo: str = "@north
 
 class ImageBuilder:
     def __init__(self, image: Image.Image):
-        self._image = image
-        self.result = image.copy()
+        self._image = image.copy()
 
     def resize_image(self, target_width: int = 2000, target_height: int = 2500) -> "ImageBuilder":
         image = self._image
@@ -353,8 +352,14 @@ class ImageBuilder:
 
 
 class ImageTextBuilder:
-    def __init__(self, image: Image.Image, text: str, font_size: int = 100, reference_font_size: int = 100,
-                 reference_width: int = 28, font_path: str = FONTS_DIR / "arial-bold_tt.ttf"):
+    def __init__(
+            self,
+            image: Image.Image,
+            text: str,
+            font_size: int = 100,
+            reference_font_size: int = 100,
+            reference_width: int = 28,
+            font_path: str = FONTS_DIR / "arial-bold_tt.ttf"):
         """
 
         :param image:
@@ -363,8 +368,7 @@ class ImageTextBuilder:
         :param reference_width: Количество символов допустимое на строке при заданной ширине reference_font_size
         :param reference_font_size: Шрифт для определения максимальной ширины строки
         """
-        self._image = image
-        self.result = image.copy()
+        self._image = image.copy()
         self.text = text
         self.font_size = font_size
         self.reference_width = reference_width
@@ -380,9 +384,6 @@ class ImageTextBuilder:
         """
         Рассчитывает количество символов, которые поместятся в строку, на основе размера шрифта.
 
-        :param font_size: Размер шрифта, для которого нужно рассчитать количество символов.
-        :param reference_font_size: Эталонный размер шрифта (по умолчанию 100).
-        :param reference_width: Количество символов при эталонном размере шрифта (по умолчанию 28).
         :return: Количество символов, которые поместятся в строку.
         """
         # Используем пропорцию для расчета
@@ -390,7 +391,7 @@ class ImageTextBuilder:
         new_width = (self.reference_width * self.font_size) / self.reference_font_size
         return int(new_width)
 
-    def _split_text(self, text: str, width: int) -> str:
+    def _split_text(self, text: str, width: int) -> list:
         """
         Ограничивает текст по ширине, добавляя переносы строк.
         Старается не разбивать слова, но если это необходимо, добавляет символ переноса "-".
@@ -429,36 +430,41 @@ class ImageTextBuilder:
         if current_line:
             wrapped_text.append(current_line.rstrip())
 
-        return '\n'.join(wrapped_text)
+        return wrapped_text
 
-    def _process_text(self):
-        characters_width = self._calculate_characters_width()
-        upper_text = self.text.upper()
-        split_text = self._split_text(upper_text, characters_width)
-        text_array = split_text.split("\n")
-
-    def add_text_line_shadow(self, text_array=None, line_weight: int = 20, padding_bottom: int = 251,
-                             padding_left: int = 33, shadow_offset: int = 1, shadow_blur_radius: int = 7,
-                             shadow_color: tuple = (0, 0, 0, 255), text_color: str = "white") -> bytes:
+    def add_text_line_shadow(
+            self,
+            text_array=None,
+            strip_width: int = 20,
+            padding_bottom: int = 251,
+            padding_left: int = 33,
+            shadow_offset: int = 1,
+            shadow_blur_radius: int = 7,
+            shadow_color: tuple = (0, 0, 0, 255),
+            text_color: str = "white"
+    ) -> "ImageTextBuilder":
         """
         Создает изображение с текстом, размещенным внизу слева, и белой полосой.
         Добавляет размытую тень для текста и вертикальной линии.
 
         :param text_color: Цвет текста и линии
         :param shadow_color: Цвет тени в RGBA формате
-        :param shadow_blur_radius: Радиус размытия тени)
+        :param shadow_blur_radius: Радиус размытия тени
         :param shadow_offset: Смещение тени (в пикселях)
-        :param padding_left:
-        :param padding_bottom:
-        :param line_weight: Ширина белой полосы
-        :param text_array: список строк, которые нужно добавить
+        :param padding_left: Отступ слева
+        :param padding_bottom: Отступ снизу
+        :param strip_width: Ширина белой полосы
+        :param text_array: Список строк, которые нужно добавить
         :return: Байты результирующего изображения.
         """
+        text_line_width = self._calculate_characters_width()
         if text_array is None:
-            text_array = []
-        image = self._image
+            text_array = self._split_text(self.text, width=text_line_width)
+
+        # Конвертируем изображение в RGBA (с прозрачностью)
+        image = self._image.convert("RGBA")
         draw = ImageDraw.Draw(image)
-        padding_left += line_weight
+        padding_left += strip_width
 
         # Вычисляем размеры текста
         line_heights = []
@@ -475,10 +481,8 @@ class ImageTextBuilder:
         total_text_height = sum(line_heights) + (len(text_array) - 1) * 5  # 5px между строками
 
         # Определяем позицию текста
-        # Отступ снизу
         text_x = padding_left + 40  # Отступ текста от полосы
         text_y = image.height - total_text_height - padding_bottom - 20  # Позиция текста по вертикали
-
 
         # Создаем временное изображение для тени текста и линии
         shadow_image = Image.new("RGBA", image.size, (0, 0, 0, 0))
@@ -486,13 +490,13 @@ class ImageTextBuilder:
 
         # Рисуем тень для вертикальной линии
         stripe_x1 = padding_left + shadow_offset
-        stripe_x2 = stripe_x1 + line_weight
+        stripe_x2 = stripe_x1 + strip_width
         stripe_y1 = text_y + shadow_offset - 30
         stripe_y2 = image.height - padding_bottom + shadow_offset
         shadow_draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill=shadow_color)
 
-        text_line_interval = 11
         # Рисуем тень для текста
+        text_line_interval = 11
         temp_text_y = text_y + shadow_offset
         for line in text_array:
             shadow_draw.text((text_x + shadow_offset, temp_text_y), line, font=self.font, fill=shadow_color)
@@ -500,27 +504,32 @@ class ImageTextBuilder:
 
         # Применяем размытие к теням
         shadow_image = shadow_image.filter(ImageFilter.GaussianBlur(shadow_blur_radius))
-        # Накладываем размытую тень на основное изображение
-        # image.paste(shadow_image, (0, 0), shadow_image)
 
+        # Накладываем размытую тень на основное изображение
         image = Image.alpha_composite(image, shadow_image)
         draw = ImageDraw.Draw(image)
 
         # Рисуем белую полосу (основная линия)
         stripe_x1 = padding_left
-        stripe_x2 = stripe_x1 + line_weight
+        stripe_x2 = stripe_x1 + strip_width
         stripe_y1 = text_y - 30
         stripe_y2 = image.height - padding_bottom
         draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill=text_color)
-
+        # print(line_width)
+        # Рисуем текст
         temp_text_y = round(text_y - self.font_size / 5)
         for line in text_array:
             draw.text((text_x, temp_text_y), line, font=self.font, fill=text_color)  # fill - цвет текста
             temp_text_y += line_heights[text_array.index(line)] + text_line_interval  # Переход на следующую строку
 
-        # Сохраняем результат в байты
-        output = BytesIO()
-        image.save(output, format="PNG")
-        output.seek(0)
+        # Возвращаем измененное изображение
+        self._image = image
+        return self
 
-        return output.getvalue()
+    def reset(self):
+        self._image = None
+
+    def build(self) -> Image.Image:
+        image = self._image
+        self.reset()
+        return image
