@@ -13,8 +13,6 @@ class ImageBuilder:
     def resize_image(self, target_width: int = 2000, target_height: int = 2500) -> "ImageBuilder":
         image = self._image
         width, height = image.size
-        aspect_ratio = width / height
-
         # Если изображение прямоугольное (ширина больше высоты), обрезаем его до квадрата
         if width > height:
             # Вычисляем координаты для обрезки до квадрата
@@ -34,14 +32,28 @@ class ImageBuilder:
 
             mirrored_image = resized_image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
             final_image.paste(mirrored_image, (0, resized_image.height))
-        else:
+            image = final_image
+
+        # Если высота изображения больше целевой высоты, обрезаем по центру
+        if height > target_height:
+            # Вычисляем координаты для обрезки по центру
+            top = (height - target_height) / 2
+            bottom = top + target_height
+            image = image.crop((0, top, width, bottom))
+
+        if width < target_width:
             # Если высота больше, чем ширина растягиваем вширь
-            resized_image = image.resize((target_width, int(target_width / aspect_ratio)), Image.Resampling.LANCZOS)
-            final_image = resized_image
-        self._image = final_image
+            resized_image = image.resize((target_width, target_height), Image.Resampling.LANCZOS)
+            image = resized_image
+        self._image = image
         return self
 
     def blur_image(self, blur_top: int = 500, radius: int = 10):
+        """
+        :param blur_top: верхняя граница размытия считая в пикселях снизу
+        :param radius: радиус размытия
+        :return:
+        """
         image = self._image
         width, height = image.size
         bottom_part = image.crop((0, height - blur_top, width, height))
@@ -51,6 +63,13 @@ class ImageBuilder:
         return self
 
     def blur_gradient(self, blur_top: int = 500, blur_bottom: int = 550, radius: int = 10):
+        """
+        :param blur_top: верхняя граница размытия считая в пикселях снизу
+        :param blur_bottom: нижняя граница размытия считая в пикселях снизу
+        :param radius: радиус самого сильного размытия
+        :return: Размывает изображение градиентом в указанном диапазоне уменьшая интенсивность при продвижении вверх
+        """
+        # """Поменять местами top и bottom"""
         image = self._image
         width, height = image.size
 
@@ -59,9 +78,9 @@ class ImageBuilder:
         draw = ImageDraw.Draw(mask)
 
         # Градиентная маска в диапазоне blur_top – blur_bottom
-        gradient_length = blur_bottom - blur_top
-        for y in range(height - blur_bottom, height - blur_top):
-            alpha = int(255 * ((y - (height - blur_bottom)) / gradient_length))
+        gradient_length = blur_top - blur_bottom
+        for y in range(height - blur_top, height - blur_bottom):
+            alpha = int(255 * ((y - (height - blur_top)) / gradient_length))
             draw.rectangle((0, y, width, y + 1), fill=alpha)
 
         # Применяем размытие ко всему изображению
@@ -93,6 +112,13 @@ class ImageBuilder:
     def build(self) -> Image:
         return self._image
 
+    def reset(self):
+        self._image = None
+
+    def to_bytes(self) -> bytes:
+        image = self._image
+        self.reset()
+        return ImageBuilder.image_to_bytes(image)
 
 class ImageTextBuilder:
     def __init__(
@@ -100,8 +126,8 @@ class ImageTextBuilder:
             image: Image.Image,
             text: str,
             font_size: int = 100,
-            reference_font_size: int = 100,
-            reference_width: int = 28,
+            reference_font_size: int = 110,
+            reference_width: int = 25,
             font_path: str = FONTS_DIR / "arial-bold_tt.ttf"):
         """
 
@@ -131,7 +157,7 @@ class ImageTextBuilder:
         """
         # Используем пропорцию для расчета
         # Ширина текста пропорциональна размеру шрифта
-        new_width = (self.reference_width * self.font_size) / self.reference_font_size
+        new_width = (self.reference_width * self.reference_font_size) / self.font_size
         return int(new_width)
 
     def _split_text(self, text: str, width: int) -> list:
@@ -181,19 +207,23 @@ class ImageTextBuilder:
             strip_width: int = 20,
             padding_bottom: int = 251,
             padding_left: int = 33,
-            shadow_offset: int = 1,
-            shadow_blur_radius: int = 7,
+            shadow_offset_x: int = 12,
+            shadow_offset_y: int = 12,
+            shadow_blur_radius: int = 4,
             shadow_color: tuple = (0, 0, 0, 255),
-            text_color: str = "white"
+            text_color: str = "white",
+            text_line_interval: int = 13
     ) -> "ImageTextBuilder":
         """
         Создает изображение с текстом, размещенным внизу слева, и белой полосой.
         Добавляет размытую тень для текста и вертикальной линии.
 
+        :param shadow_offset_y: Смещение тени px
+        :param shadow_offset_x: Смещение тени px
+        :param text_line_interval:
         :param text_color: Цвет текста и линии
         :param shadow_color: Цвет тени в RGBA формате
         :param shadow_blur_radius: Радиус размытия тени
-        :param shadow_offset: Смещение тени (в пикселях)
         :param padding_left: Отступ слева
         :param padding_bottom: Отступ снизу
         :param strip_width: Ширина белой полосы
@@ -209,19 +239,16 @@ class ImageTextBuilder:
         draw = ImageDraw.Draw(image)
         padding_left += strip_width
 
+        line_height = 0
         # Вычисляем размеры текста
-        line_heights = []
-        max_text_width = 0
-        for line in text_array:
+        if len(text_array) > 0:
+            line = text_array[0]
             bbox = draw.textbbox((0, 0), line, font=self.font)
-            line_width = bbox[2] - bbox[0]  # Ширина строки
-            line_height = bbox[3] - bbox[1]  # Высота строки
-            line_heights.append(line_height)
-            if line_width > max_text_width:
-                max_text_width = line_width
+            line_height = bbox[3] - bbox[1] # высота строки
+        line_heights = [line_height] * len(text_array)
 
         # Общая высота текста с учетом отступов между строками
-        total_text_height = sum(line_heights) + (len(text_array) - 1) * 5  # 5px между строками
+        total_text_height = sum(line_heights) + (len(text_array) - 1) * text_line_interval  # 5px между строками
 
         # Определяем позицию текста
         text_x = padding_left + 40  # Отступ текста от полосы
@@ -232,17 +259,16 @@ class ImageTextBuilder:
         shadow_draw = ImageDraw.Draw(shadow_image)
 
         # Рисуем тень для вертикальной линии
-        stripe_x1 = padding_left + shadow_offset
+        stripe_x1 = padding_left + shadow_offset_x
         stripe_x2 = stripe_x1 + strip_width
-        stripe_y1 = text_y + shadow_offset - 30
-        stripe_y2 = image.height - padding_bottom + shadow_offset
+        stripe_y1 = text_y + shadow_offset_y - 30
+        stripe_y2 = image.height - padding_bottom + shadow_offset_y
         shadow_draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill=shadow_color)
 
         # Рисуем тень для текста
-        text_line_interval = 11
-        temp_text_y = text_y + shadow_offset
+        temp_text_y = round(text_y - self.font_size / 5) + shadow_offset_y
         for line in text_array:
-            shadow_draw.text((text_x + shadow_offset, temp_text_y), line, font=self.font, fill=shadow_color)
+            shadow_draw.text((text_x+shadow_offset_x, temp_text_y), line, font=self.font, fill=shadow_color)
             temp_text_y += line_heights[text_array.index(line)] + text_line_interval  # Переход на следующую строку
 
         # Применяем размытие к теням
@@ -252,17 +278,20 @@ class ImageTextBuilder:
         image = Image.alpha_composite(image, shadow_image)
         draw = ImageDraw.Draw(image)
 
+        # Рисуем текст
+        temp_text_y = round(text_y - self.font_size / 5)
+        for line in text_array:
+            draw.text((text_x, temp_text_y), line, font=self.font, fill=text_color)  # fill - цвет текста
+            temp_text_y += line_heights[text_array.index(line)] + text_line_interval  # Переход на следующую строку
+
         # Рисуем белую полосу (основная линия)
         stripe_x1 = padding_left
         stripe_x2 = stripe_x1 + strip_width
         stripe_y1 = text_y - 30
         stripe_y2 = image.height - padding_bottom
         draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill=text_color)
-        # Рисуем текст
-        temp_text_y = round(text_y - self.font_size / 5)
-        for line in text_array:
-            draw.text((text_x, temp_text_y), line, font=self.font, fill=text_color)  # fill - цвет текста
-            temp_text_y += line_heights[text_array.index(line)] + text_line_interval  # Переход на следующую строку
+
+
 
         # Возвращаем измененное изображение
         self._image = image
@@ -275,3 +304,8 @@ class ImageTextBuilder:
         image = self._image
         self.reset()
         return image
+
+    def to_bytes(self) -> bytes:
+        image = self._image
+        self.reset()
+        return ImageBuilder.image_to_bytes(image)

@@ -15,6 +15,6 @@ def test_image_builder():
         # resized_image = ImageBuilder(image).resize_image().blur_image().blur_gradient().add_water_mark().build()
         # image_with_text = ImageTextBuilder(resized_image, text=text).add_text_line_shadow().build()
     with open(IMAGES_DIR / 'result.png', 'wb') as f:
-        f.write(ImageBuilder.image_to_bytes(image_with_text))
+        f.write(image_with_text)
 
 test_image_builder()

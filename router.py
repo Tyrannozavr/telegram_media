@@ -8,6 +8,7 @@ from aiogram.types import Message, BufferedInputFile
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from interactors.images import image_instagram_process_interactor
+from services.images import ImageBuilder
 
 router = Router()
 
