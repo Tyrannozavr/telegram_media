@@ -1,11 +1,12 @@
-from services.images import ImageResizeProcess, image_to_bytes, cover_text
-from services.text import wrap_text, calculate_characters_width
+import io
+
+from PIL import Image
+
+from services.images import ImageBuilder, ImageTextBuilder
 
 
 def image_instagram_process_interactor(image: bytes, text: str, font_size: int = 100):
-    text_width = calculate_characters_width(font_size)
-    text_split = wrap_text(text.upper(), width=text_width)
-    image_resized = ImageResizeProcess.process_image(image)
-    image_bytes_resized = image_to_bytes(image_resized)
-    output_image = cover_text(image_bytes_resized, text=text_split, font_size=font_size)
-    return output_image
+    image = Image.open(io.BytesIO(image))
+    resized_image = ImageBuilder(image).resize_image().blur_image().blur_gradient().add_water_mark().build()
+    image_with_text = ImageTextBuilder(resized_image, text=text).add_text_line_shadow().build()
+    return image_with_text

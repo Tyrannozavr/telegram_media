@@ -26,8 +26,6 @@ file_storage = {}
 @router.message(lambda message: message.document)
 async def handle_file(message: Message, bot: Bot):
     file_id = message.document.file_id
-    print("First got ", file_id)
-
     file = await bot.get_file(file_id)
     file_bytes = await bot.download_file(file.file_path)
     font_size = 100
@@ -46,7 +44,6 @@ async def handle_adjust_size(callback: CallbackQuery, bot: Bot):
     data = callback.data.split(":")
     action = data[1]  # +10 или -10
     message = callback.message
-    # file_id = message.document.file_id
     file_id = file_storage.get(message.message_id)
     if not file_id:
         return message.answer("Произошла какая то ошибка, файл не найден")
