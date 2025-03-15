@@ -34,8 +34,8 @@ async def handle_file(message: Message, bot: Bot):
     result_image = image_instagram_process_interactor(file_bytes.read(), message.caption, font_size)
 
     builder = InlineKeyboardBuilder()
-    builder.button(text="-10px", callback_data=f"adjust_size:{font_size - 10}")
-    builder.button(text="+10px", callback_data=f"adjust_size:{font_size + 10}")
+    builder.button(text="-5px", callback_data=f"adjust_size:{font_size - 5}")
+    builder.button(text="+5px", callback_data=f"adjust_size:{font_size + 5}")
     result_file = BufferedInputFile(result_image, filename="result.png")
     answer = await message.answer_document(result_file, caption=message.caption, reply_markup=builder.as_markup())
     # file_storage[answer.message_id] = file_id
