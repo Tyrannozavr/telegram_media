@@ -11,8 +11,8 @@ class ImageTextBuilder:
             image: Image.Image,
             text: str,
             font_size: int = 100,
-            reference_font_size: int = 110,
-            reference_width: int = 25,
+            reference_font_size: int = 150,
+            reference_width: int = 17,
             font_path: str = FONTS_DIR / "arial-bold_tt.ttf"):
         """
 
@@ -62,28 +62,18 @@ class ImageTextBuilder:
         current_line = ''  # Текущая строка
 
         for word in words:
-            # Если добавление слова не превышает лимит
-            if len(current_line) + len(word) <= width:
-                current_line += word + ' '
-            else:
-                # Если слово слишком длинное и не помещается в строку
-                if len(word) > width:
-                    # Разбиваем слово на части
-                    while len(word) > width:
-                        # Добавляем часть слова и символ переноса
-                        wrapped_text.append(current_line + word[:width - 1] + '-')
-                        word = word[width - 1:]  # Оставшаяся часть слова
-                        current_line = ''
-                    current_line = word + ' '
-                else:
-                    # Если слово не помещается, завершаем текущую строку и начинаем новую
+            # Если добавление слова превышает лимит, завершаем текущую строку
+            if len(current_line) + len(word) + 1 > width:  # +1 для пробела
+                if current_line:
                     wrapped_text.append(current_line.rstrip())
-                    current_line = word + ' '
+                current_line = ''
+
+            # Добавляем слово в текущую строку
+            current_line += word + ' '
 
         # Добавляем последнюю строку
         if current_line:
             wrapped_text.append(current_line.rstrip())
-
         return wrapped_text
 
     def add_text_line_shadow(
@@ -99,7 +89,7 @@ class ImageTextBuilder:
             second_shadow_blur_radius: int = 12,  # Новый параметр для второй тени
             shadow_color: tuple = (0, 0, 0, 255),
             text_color: str = "white",
-            text_line_interval: int = 13
+            text_line_interval: int = 0
     ) -> "ImageTextBuilder":
         """
         Создает изображение с текстом, размещенным внизу слева, и белой полосой.
@@ -122,27 +112,17 @@ class ImageTextBuilder:
         text_line_width = self._calculate_characters_width()
         if text_array is None:
             text_array = self._split_text(self.text, width=text_line_width)
-
         # Конвертируем изображение в RGBA (с прозрачностью)
         image = self._image.convert("RGBA")
         draw = ImageDraw.Draw(image)
         padding_left += strip_width
 
-        line_height = 0
-        # Вычисляем размеры текста
-        if len(text_array) > 0:
-            line = text_array[0]
-            bbox = draw.textbbox((0, 0), line, font=self.font)
-            line_height = bbox[3] - bbox[1]  # высота строки
-        line_heights = [line_height] * len(text_array)
-
+        line_heights = [self.font_size + text_line_interval] * len(text_array)
         # Общая высота текста с учетом отступов между строками
         total_text_height = sum(line_heights) + (len(text_array) - 1) * text_line_interval  # 5px между строками
-
         # Определяем позицию текста
         text_x = padding_left + 40  # Отступ текста от полосы
-        text_y = image.height - total_text_height - padding_bottom - 20  # Позиция текста по вертикали
-
+        text_y = image.height - padding_bottom - total_text_height + 20 # Позиция текста по вертикали
         # Создаем временное изображение для первой тени текста и линии
         shadow_image = Image.new("RGBA", image.size, (0, 0, 0, 0))
         shadow_draw = ImageDraw.Draw(shadow_image)
@@ -153,12 +133,11 @@ class ImageTextBuilder:
         stripe_y1 = text_y + shadow_offset_y - 30
         stripe_y2 = image.height - padding_bottom + shadow_offset_y
         shadow_draw.rectangle([stripe_x1, stripe_y1, stripe_x2, stripe_y2], fill=shadow_color)
-
         # Рисуем первую тень для текста
         temp_text_y = round(text_y - self.font_size / 5) + shadow_offset_y
         for line in text_array:
             shadow_draw.text((text_x + shadow_offset_x, temp_text_y), line, font=self.font, fill=shadow_color)
-            temp_text_y += line_heights[text_array.index(line)] + text_line_interval  # Переход на следующую строку
+            temp_text_y += self.font_size + text_line_interval # Переход на следующую строку
 
         # Применяем размытие к первой тени
         shadow_image = shadow_image.filter(ImageFilter.GaussianBlur(shadow_blur_radius))
@@ -181,7 +160,7 @@ class ImageTextBuilder:
         temp_text_y = round(text_y - self.font_size / 5) + second_shadow_offset
         for line in text_array:
             shadow_draw2.text((text_x + second_shadow_offset, temp_text_y), line, font=self.font, fill=shadow_color)
-            temp_text_y += line_heights[text_array.index(line)] + text_line_interval  # Переход на следующую строку
+            temp_text_y += self.font_size + text_line_interval # Переход на следующую строку
 
         # Применяем размытие ко второй тени
         shadow_image2 = shadow_image2.filter(ImageFilter.GaussianBlur(second_shadow_blur_radius))
@@ -196,7 +175,8 @@ class ImageTextBuilder:
         temp_text_y = round(text_y - self.font_size / 5)
         for line in text_array:
             draw.text((text_x, temp_text_y), line, font=self.font, fill=text_color)  # fill - цвет текста
-            temp_text_y += line_heights[text_array.index(line)] + text_line_interval  # Переход на следующую строку
+            temp_text_y += self.font_size + text_line_interval # Переход на следующую строку
+            # temp_text_y += line_heights[text_array.index(line)] + text_line_interval  # Переход на следующую строку
 
         # Рисуем белую полосу (основная линия)
         stripe_x1 = padding_left

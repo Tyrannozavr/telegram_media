@@ -32,7 +32,7 @@ def image_instagram_process_interactor(image: bytes, text: str, font_size: int =
                          )
 
         image_with_text = (ImageTextBuilder(resized_image, text=text, font_size=font_size)
-                           .add_text_line_shadow(text_line_interval=15)
+                           .add_text_line_shadow()
                            .to_bytes())
 
         return image_with_text
