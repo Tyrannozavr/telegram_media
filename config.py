@@ -24,7 +24,7 @@ IMAGES_DIR = BASE_DIR / "static" / "images"
 # image_path = IMAGES_DIR / "logo.png"
 
 
-REDIS = getenv("REDIS", "redis://localhost:6379")
+REDIS = getenv("REDIS_URL", "redis://localhost:6379")
 redis = redis.StrictRedis.from_url(REDIS, decode_responses=True)
 
 
