@@ -7,11 +7,13 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 from config import BOT_TOKEN
+from middlewares.error_middleware import ErrorLoggingMiddleware
 from router import router
 
 logging.basicConfig(level=logging.INFO)
 
 dp = Dispatcher()
+dp.update.middleware(ErrorLoggingMiddleware())
 dp.include_router(router)
 
 

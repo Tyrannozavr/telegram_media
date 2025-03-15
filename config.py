@@ -35,7 +35,7 @@ if not os.path.exists(log_directory):
 
 # Настройка логирования
 logger = logging.getLogger("my_logger")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.ERROR)
 
 current_date = datetime.now().strftime("%Y-%m-%d")
 log_file_name = f"app_{current_date}.log"

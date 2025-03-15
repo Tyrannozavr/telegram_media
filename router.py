@@ -26,8 +26,6 @@ async def handle_image(message: Message, bot: Bot):
 @router.message(lambda message: message.document)
 async def handle_file(message: Message, bot: Bot):
     file_id = message.document.file_id
-    # logger.info("Start processing image ",  str(file_id))
-
     file = await bot.get_file(file_id)
     file_bytes = await bot.download_file(file.file_path)
     font_size = 100
@@ -38,7 +36,6 @@ async def handle_file(message: Message, bot: Bot):
     builder.button(text="+5px", callback_data=f"adjust_size:{font_size + 5}")
     result_file = BufferedInputFile(result_image, filename="result.png")
     answer = await message.answer_document(result_file, caption=message.caption, reply_markup=builder.as_markup())
-    # file_storage[answer.message_id] = file_id
     redis.set(answer.message_id, file_id)
 
 
@@ -47,10 +44,7 @@ async def handle_adjust_size(callback: CallbackQuery, bot: Bot):
     data = callback.data.split(":")
     action = data[1]  # +10 или -10
     message = callback.message
-    # file_id = file_storage.get(message.message_id)
     file_id = redis.get(message.message_id)
-    print("Start processing image callback ")
-    print(file_id)
     if not file_id:
         return message.answer("Произошла какая то ошибка, файл не найден")
     # Выводим в консоль
