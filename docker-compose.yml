@@ -10,6 +10,7 @@ services:
     volumes:
       - ./logs:/app/logging
     command: ["python", "main.py"]
+    restart: unless-stopped
 
   redis:
     image: redis:latest
