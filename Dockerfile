@@ -1,11 +1,12 @@
-FROM python:3.9-slim as builder
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --user -r requirements.txt
+FROM python:3.12
 
-FROM python:3.9-slim
+ENV PYTHONUNBUFFERED 1
+
 WORKDIR /app
-COPY --from=builder /root/.local /root/.local
+
+COPY ./requirements.txt .
+RUN pip install --upgrade pip
+
 COPY . .
-ENV PATH=/root/.local/bin:$PATH
-CMD ["python", "main.py"]
+RUN pip install -r requirements.txt
+#CMD python main.py

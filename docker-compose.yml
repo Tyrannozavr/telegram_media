@@ -1,0 +1,17 @@
+services:
+  telegram_media:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./logs:/app/logging
+    command: ["python", "main.py"]
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"

@@ -3,7 +3,7 @@ import io
 import pillow_heif
 from PIL import Image, UnidentifiedImageError
 
-from logger import logger
+from config import logger
 from services.images import ImageBuilder, ImageTextBuilder
 
 pillow_heif.register_heif_opener()
