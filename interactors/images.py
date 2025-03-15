@@ -4,7 +4,8 @@ import pillow_heif
 from PIL import Image, UnidentifiedImageError
 
 from config import logger
-from services.images import ImageBuilder, ImageTextBuilder
+from services.images import ImageBuilder
+from services.text import ImageTextBuilder
 
 pillow_heif.register_heif_opener()
 
