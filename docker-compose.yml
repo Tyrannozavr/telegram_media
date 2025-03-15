@@ -9,7 +9,7 @@ services:
       - REDIS_URL=redis://redis:6379
     volumes:
       - ./logs:/app/logging
-    command: ["python", "main.py"]
+    command: python main.py
     restart: unless-stopped
 
   redis:

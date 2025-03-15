@@ -26,7 +26,7 @@ IMAGES_DIR = BASE_DIR / "static" / "images"
 
 REDIS = getenv("REDIS_URL", "redis://localhost:6379")
 redis = redis.StrictRedis.from_url(REDIS, decode_responses=True)
-
+print("redis url is ", REDIS)
 
 log_directory = "logging"
 if not os.path.exists(log_directory):
