@@ -26,7 +26,7 @@ async def handle_image(message: Message, bot: Bot):
 @router.message(lambda message: message.document)
 async def handle_file(message: Message, bot: Bot):
     file_id = message.document.file_id
-    logger.info("Start processing image ",  file_id)
+    # logger.info("Start processing image ",  str(file_id))
 
     file = await bot.get_file(file_id)
     file_bytes = await bot.download_file(file.file_path)
@@ -49,6 +49,8 @@ async def handle_adjust_size(callback: CallbackQuery, bot: Bot):
     message = callback.message
     # file_id = file_storage.get(message.message_id)
     file_id = redis.get(message.message_id)
+    print("Start processing image callback ")
+    print(file_id)
     if not file_id:
         return message.answer("Произошла какая то ошибка, файл не найден")
     # Выводим в консоль
@@ -61,8 +63,8 @@ async def handle_adjust_size(callback: CallbackQuery, bot: Bot):
     await callback.answer(f"Вы нажали {action} для файла {file_id}")
 
     builder = InlineKeyboardBuilder()
-    builder.button(text="-10px", callback_data=f"adjust_size:{font_size - 10}")
-    builder.button(text="+10px", callback_data=f"adjust_size:{font_size + 10}")
+    builder.button(text="-5px", callback_data=f"adjust_size:{font_size - 5}")
+    builder.button(text="+5px", callback_data=f"adjust_size:{font_size + 5}")
 
     await bot.edit_message_media(
         media=types.InputMediaDocument(media=result_file, caption=message.caption),
