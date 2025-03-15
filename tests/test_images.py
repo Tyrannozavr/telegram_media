@@ -8,7 +8,7 @@ from interactors.images import image_instagram_process_interactor
 from services.images import ImageBuilder, ImageTextBuilder
 
 def test_image_builder():
-    with open(IMAGES_DIR / '12.jpg', 'rb') as f:
+    with open(IMAGES_DIR / 'sample1.heic', 'rb') as f:
         text = "Инал Тасоев и Мадина Таймазова выступят на тбилисском «Большом шлеме»"
         image_with_text = image_instagram_process_interactor(image=f.read(), text=text)
         # image = Image.open(io.BytesIO(f.read()))
