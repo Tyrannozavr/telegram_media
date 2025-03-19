@@ -11,8 +11,8 @@ class ImageTextBuilder:
             image: Image.Image,
             text: str,
             font_size: int = 100,
-            reference_font_size: int = 150,
-            reference_width: int = 17,
+            reference_font_size: int = 100,
+            reference_width: int = 27,
             font_path: str = FONTS_DIR / "arial-bold_tt.ttf"):
         """
 
