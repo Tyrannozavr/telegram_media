@@ -63,11 +63,10 @@ class ImageTextBuilder:
 
         for word in words:
             # Если добавление слова превышает лимит, завершаем текущую строку
-            if len(current_line) + len(word) + 1 > width:  # +1 для пробела
+            if len(current_line) + len(word) > width:
                 if current_line:
                     wrapped_text.append(current_line.rstrip())
                 current_line = ''
-
             # Добавляем слово в текущую строку
             current_line += word + ' '
 
