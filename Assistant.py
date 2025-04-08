@@ -1,4 +1,5 @@
 import os
+import time  # Import the time module
 
 import httpx
 from aiogram import Bot, Dispatcher, types
@@ -19,7 +20,7 @@ bot = Bot(token=TELEGRAM_TOKEN)
 dp = Dispatcher()
 # client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
-proxy_url = "http://username:password@proxy_ip:port"  # или "socks5://..."
+proxy_url = "http://YdMY893cZ:gvXKDx45Y@172.120.41.170:64742"
 
 http_client = httpx.AsyncClient(
     proxy=proxy_url,
@@ -45,6 +46,11 @@ async def reset_thread(message: Message):
 async def handle_message(message: types.Message):
     user_id = message.from_user.id
     user_input = message.text
+    file_id = message.photo[-1].file_id if message.photo else None  # Get the file_id of the last photo in the message
+
+
+    # Define the image URL
+    image_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}"
 
     # Получаем или создаем thread
     thread_id = user_threads.get(user_id)
@@ -53,12 +59,15 @@ async def handle_message(message: types.Message):
         thread_id = thread.id
         user_threads[user_id] = thread_id
 
-    # Отправляем сообщение в thread
+    # Отправляем сообщение в thread, including the image URL
     await client.beta.threads.messages.create(
         thread_id=thread_id,
         role="user",
-        content=user_input
+        content=f"{user_input}\n\nImage URL: {image_url}"
     )
+
+    # Measure the time taken for the assistant to respond
+    start_time = time.time()  # Start time
 
     # Запускаем ассистента
     run = await client.beta.threads.runs.create(
@@ -76,6 +85,11 @@ async def handle_message(message: types.Message):
             break
         await asyncio.sleep(1)
 
+    # Calculate and log the time taken
+    end_time = time.time()  # End time
+    elapsed_time = end_time - start_time
+    print(f"Request to OpenAI took {elapsed_time:.2f} seconds")
+
     # Получаем ответ
     messages = await client.beta.threads.messages.list(thread_id=thread_id)
     reply = messages.data[0].content[0].text.value
@@ -86,5 +100,6 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
+    print("Hello, I'm an AI assistant! Type /re to reset the session. Enjoy your interactions! :)")
     import asyncio
     asyncio.run(main())

@@ -12,6 +12,19 @@ services:
     command: python main.py
     restart: unless-stopped
 
+  chatgpt_bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./logs:/app/logging
+    command: python Assistant.py
+    restart: unless-stopped
+
   redis:
     image: redis:latest
     expose:
