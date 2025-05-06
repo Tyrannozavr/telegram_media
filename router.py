@@ -66,4 +66,3 @@ async def handle_adjust_size(callback: CallbackQuery, bot: Bot):
         message_id=message.message_id,
         reply_markup=builder.as_markup()
     )
-    return None
