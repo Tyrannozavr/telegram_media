@@ -29,3 +29,4 @@ services:
     image: redis:latest
     expose:
       - "6379"
+    restart: unless-stopped

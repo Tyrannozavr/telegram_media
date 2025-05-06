@@ -5,8 +5,8 @@ from aiogram.types import CallbackQuery
 from aiogram.types import Message, BufferedInputFile
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from config import storage
 from interactors.images import image_instagram_process_interactor
-from config import redis, logger
 
 router = Router()
 
@@ -36,7 +36,7 @@ async def handle_file(message: Message, bot: Bot):
     builder.button(text="+5px", callback_data=f"adjust_size:{font_size + 5}")
     result_file = BufferedInputFile(result_image, filename="result.png")
     answer = await message.answer_document(result_file, caption=message.caption, reply_markup=builder.as_markup())
-    redis.set(answer.message_id, file_id)
+    storage.set(answer.message_id, file_id)
 
 
 @router.callback_query(lambda callback: callback.data.startswith("adjust_size"))
@@ -44,7 +44,7 @@ async def handle_adjust_size(callback: CallbackQuery, bot: Bot):
     data = callback.data.split(":")
     action = data[1]  # +10 или -10
     message = callback.message
-    file_id = redis.get(message.message_id)
+    file_id = storage.get(message.message_id)
     if not file_id:
         return message.answer("Произошла какая то ошибка, файл не найден")
     # Выводим в консоль
@@ -66,3 +66,4 @@ async def handle_adjust_size(callback: CallbackQuery, bot: Bot):
         message_id=message.message_id,
         reply_markup=builder.as_markup()
     )
+    return None

@@ -5,7 +5,8 @@ from logging.handlers import TimedRotatingFileHandler
 from os import getenv
 from pathlib import Path
 
-import redis
+from aiogram.fsm.storage.memory import MemoryStorage
+# import redis
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,9 +25,9 @@ IMAGES_DIR = BASE_DIR / "static" / "images"
 # image_path = IMAGES_DIR / "logo.png"
 
 
-REDIS = getenv("REDIS_URL", "redis://localhost:6379")
-redis = redis.StrictRedis.from_url(REDIS, decode_responses=True)
-
+# REDIS = getenv("REDIS_URL", "redis://localhost:6379")
+# redis = redis.StrictRedis.from_url(REDIS, decode_responses=True)
+storage = MemoryStorage()
 log_directory = "logging"
 if not os.path.exists(log_directory):
     os.makedirs(log_directory)
