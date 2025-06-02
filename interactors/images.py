@@ -9,6 +9,9 @@ from services.text import ImageTextBuilder
 
 pillow_heif.register_heif_opener()
 
+TARGET_WIDTH = 2000
+TARGET_HEIGHT = 2500
+
 def _debug_image_info(image: Image.Image, stage: str):
     """Debug function to check image properties"""
     logger.info(f"Image at {stage}:")
@@ -25,8 +28,7 @@ def _debug_image_info(image: Image.Image, stage: str):
 def image_instagram_process_interactor(text: str, font_size: int = 100, image: bytes = None) -> bytes:
     try:
         # Define standard size for all images
-        TARGET_WIDTH = 2000
-        TARGET_HEIGHT = 2500
+
 
         if image is not None:
             # Existing code for when an image is provided
