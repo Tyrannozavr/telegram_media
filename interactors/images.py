@@ -24,6 +24,10 @@ def _debug_image_info(image: Image.Image, stage: str):
 
 def image_instagram_process_interactor(text: str, font_size: int = 100, image: bytes = None) -> bytes:
     try:
+        # Define standard size for all images
+        TARGET_WIDTH = 2000
+        TARGET_HEIGHT = 2500
+
         if image is not None:
             # Existing code for when an image is provided
             blur_top = 480
@@ -40,7 +44,7 @@ def image_instagram_process_interactor(text: str, font_size: int = 100, image: b
                 gradient_top = blur_top + 0
 
             resized_image = (ImageBuilder(image)
-                             .resize_image()
+                             .resize_image(target_width=TARGET_WIDTH, target_height=TARGET_HEIGHT)
                              .blur_image(blur_top=blur_top)
                              .blur_gradient(blur_top=gradient_top, blur_bottom=blur_top)
                              .add_water_mark()
@@ -48,8 +52,8 @@ def image_instagram_process_interactor(text: str, font_size: int = 100, image: b
                              )
             _debug_image_info(resized_image, "after processing")
         else:
-            # Create a transparent image if no image is provided
-            resized_image = Image.new('RGBA', (1080, 1080), (0, 0, 0, 0))  # 1080x1080 transparent image
+            # Create a transparent image with the same size as processed images
+            resized_image = Image.new('RGBA', (TARGET_WIDTH, TARGET_HEIGHT), (0, 0, 0, 0))
             _debug_image_info(resized_image, "new transparent")
 
         # Process text for both cases (with or without image)
