@@ -17,26 +17,35 @@ async def handle_start(message: Message):
                          f"приведу его к предустановленному формату")
 
 
-@router.message(lambda message: message.photo)
-async def handle_image(message: Message, bot: Bot):
-    await message.answer(f"Фото тоже будет")
+@router.message(lambda message: message.photo or message.document or message.text)
+async def handle_media(message: Message, bot: Bot):
+    file_id = None
+    file_bytes = None
+    if message.photo:
+        file_id = message.photo[-1].file_id
+    elif message.document:
+        file_id = message.document.file_id
 
+    if file_id is not None:
+        file = await bot.get_file(file_id)
+        file_bytes = await bot.download_file(file.file_path)
 
-
-@router.message(lambda message: message.document)
-async def handle_file(message: Message, bot: Bot):
-    file_id = message.document.file_id
-    file = await bot.get_file(file_id)
-    file_bytes = await bot.download_file(file.file_path)
     font_size = 100
-    result_image = image_instagram_process_interactor(file_bytes.read(), message.caption, font_size)
+    if file_bytes is not None:
+        file_bytes = file_bytes.read()
+    photo_text = message.caption if message.caption else message.text
+    result_image = image_instagram_process_interactor(image=file_bytes, text=photo_text,
+                                                      font_size=font_size)
 
     builder = InlineKeyboardBuilder()
     builder.button(text="-5px", callback_data=f"adjust_size:{font_size - 5}")
     builder.button(text="+5px", callback_data=f"adjust_size:{font_size + 5}")
     result_file = BufferedInputFile(result_image, filename="result.png")
     answer = await message.answer_document(result_file, caption=message.caption, reply_markup=builder.as_markup())
-    storage.set(answer.message_id, file_id)
+    
+    # Only store file_id in Redis if it exists
+    if file_id is not None:
+        storage.set(answer.message_id, file_id)
 
 
 @router.callback_query(lambda callback: callback.data.startswith("adjust_size"))
@@ -51,7 +60,8 @@ async def handle_adjust_size(callback: CallbackQuery, bot: Bot):
     file = await bot.get_file(file_id)
     file_bytes = await bot.download_file(file.file_path)
     font_size = int(action)
-    result_image = image_instagram_process_interactor(file_bytes.read(), message.caption, font_size)
+    result_image = image_instagram_process_interactor(image=file_bytes.read(), text=message.caption,
+                                                      font_size=font_size)
     result_file = BufferedInputFile(result_image, filename="result.png")
     # Отправляем ответ пользователю (чтобы убрать "часики" у кнопки)
     await callback.answer(f"Вы нажали {action} для файла {file_id}")

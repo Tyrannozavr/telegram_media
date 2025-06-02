@@ -9,33 +9,69 @@ from services.text import ImageTextBuilder
 
 pillow_heif.register_heif_opener()
 
-def image_instagram_process_interactor(image: bytes, text: str, font_size: int = 100) -> bytes:
+def _debug_image_info(image: Image.Image, stage: str):
+    """Debug function to check image properties"""
+    logger.info(f"Image at {stage}:")
+    logger.info(f"Mode: {image.mode}")
+    logger.info(f"Size: {image.size}")
+    if image.mode == 'RGBA':
+        # Check if image has any transparent pixels
+        alpha = image.split()[3]
+        transparent_pixels = sum(1 for pixel in alpha.getdata() if pixel == 0)
+        total_pixels = image.size[0] * image.size[1]
+        transparency_percentage = (transparent_pixels / total_pixels) * 100
+        logger.info(f"Transparent pixels: {transparent_pixels} ({transparency_percentage:.2f}%)")
+
+def image_instagram_process_interactor(text: str, font_size: int = 100, image: bytes = None) -> bytes:
     try:
-        blur_top = 480
-        gradient_top = 600
+        if image is not None:
+            # Existing code for when an image is provided
+            blur_top = 480
+            gradient_top = 600
+            if text is not None:
+                text = text.upper()
+
+            # Пытаемся открыть изображение
+            image = Image.open(io.BytesIO(image))
+            _debug_image_info(image, "input")
+
+            if image.width < image.height:
+                blur_top = 0
+                gradient_top = blur_top + 0
+
+            resized_image = (ImageBuilder(image)
+                             .resize_image()
+                             .blur_image(blur_top=blur_top)
+                             .blur_gradient(blur_top=gradient_top, blur_bottom=blur_top)
+                             .add_water_mark()
+                             .build()
+                             )
+            _debug_image_info(resized_image, "after processing")
+        else:
+            # Create a transparent image if no image is provided
+            resized_image = Image.new('RGBA', (1080, 1080), (0, 0, 0, 0))  # 1080x1080 transparent image
+            _debug_image_info(resized_image, "new transparent")
+
+        # Process text for both cases (with or without image)
         if text is not None:
             text = text.upper()
 
-        # Пытаемся открыть изображение
-        image = Image.open(io.BytesIO(image))
-
-        if image.width < image.height:
-            blur_top = 0
-            gradient_top = blur_top + 0
-
-        resized_image = (ImageBuilder(image)
-                         .resize_image()
-                         .blur_image(blur_top=blur_top)
-                         .blur_gradient(blur_top=gradient_top, blur_bottom=blur_top)
-                         .add_water_mark()
-                         .build()
-                         )
-
-        image_with_text = (ImageTextBuilder(resized_image, text=text, font_size=font_size)
-                           .add_text_line_shadow()
-                           .to_bytes())
-
-        return image_with_text
+        # When no image is provided, we want to ensure the text is added with transparency
+        if image is None:
+            # Create a new transparent image for text
+            image_with_text = (ImageTextBuilder(resized_image, text=text, font_size=font_size)
+                              .add_text_line_shadow()
+                              .build())
+            _debug_image_info(image_with_text, "final with text")
+            # Convert to bytes using PNG format to preserve transparency
+            output = io.BytesIO()
+            image_with_text.save(output, format='PNG')
+            return output.getvalue()
+        else:
+            image_with_text = (ImageTextBuilder(resized_image, text=text, font_size=font_size)
+                              .add_text_line_shadow()
+                              .to_bytes())
+            return image_with_text
 
     except UnidentifiedImageError as e:
         logger.error(f"Unidentified image error: {e}")

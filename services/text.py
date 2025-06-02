@@ -196,7 +196,7 @@ class ImageTextBuilder:
         self.reset()
         return image
 
-    def to_bytes(self) -> bytes:
+    def to_bytes(self, format: str = 'JPEG') -> bytes:
         image = self._image
         self.reset()
-        return ImageBuilder.image_to_bytes(image)
+        return ImageBuilder.image_to_bytes(image, image_format=format)
