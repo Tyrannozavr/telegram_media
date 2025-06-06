@@ -25,7 +25,13 @@ IMAGES_DIR = BASE_DIR / "static" / "images"
 
 
 REDIS = getenv("REDIS_URL", "redis://localhost:6379")
-storage = redis.StrictRedis.from_url(REDIS, decode_responses=True)
+storage = redis.StrictRedis.from_url(
+    REDIS, 
+    decode_responses=True,
+    socket_timeout=5,
+    socket_connect_timeout=5,
+    retry_on_timeout=True
+)
 
 log_directory = "logging"
 if not os.path.exists(log_directory):

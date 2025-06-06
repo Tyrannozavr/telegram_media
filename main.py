@@ -21,7 +21,7 @@ dp.include_router(router)
 async def main() -> None:
     # Initialize Bot instance with default bot properties which will be passed to all API calls
     app_logger.info("Starting bot")
-    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    bot = Bot(token=BOT_TOKEN, timeout=60, default=DefaultBotProperties(parse_mode=ParseMode.HTML))  # Увеличиваем таймауты для бота
 
     # And the run events dispatching
     await dp.start_polling(bot)

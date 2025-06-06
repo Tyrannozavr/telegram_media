@@ -94,3 +94,19 @@ def print_size(image: Image.Image):
         image_size_bytes = len(image_bytes)  # Вес изображения в байтах
         image_size_mb = image_size_bytes / (1024 * 1024)  # Переводим в мегабайты
         print(f"Вес изображения: {image_size_bytes} байт ({image_size_mb:.2f} МБ)")
+
+# Добавьте функцию с повторными попытками
+import asyncio
+
+async def download_with_retry(bot, file_id, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            file = await bot.get_file(file_id)
+            file_bytes = await bot.download_file(file.file_path)
+            return file_bytes.read()
+        except Exception as e:
+            if attempt < max_retries - 1:
+                await asyncio.sleep(1 * (attempt + 1))  # Экспоненциальная задержка
+                continue
+            raise
+    return None
