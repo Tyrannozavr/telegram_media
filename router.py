@@ -34,6 +34,7 @@ async def handle_media(message: Message, bot: Bot):
     if file_bytes is not None:
         file_bytes = file_bytes.read()
     photo_text = message.caption if message.caption else message.text
+    await message.bot.send_chat_action(action="upload_photo", chat_id=message.chat.id)
     result_image = image_instagram_process_interactor(image=file_bytes, text=photo_text,
                                                       font_size=font_size)
 
@@ -41,7 +42,8 @@ async def handle_media(message: Message, bot: Bot):
     builder.button(text="-5px", callback_data=f"adjust_size:{font_size - 5}")
     builder.button(text="+5px", callback_data=f"adjust_size:{font_size + 5}")
     result_file = BufferedInputFile(result_image, filename="result.png")
-    answer = await message.answer_document(result_file, caption=message.caption, reply_markup=builder.as_markup())
+    answer_text = message.caption if message.caption else message.text
+    answer = await message.answer_document(result_file, caption=answer_text, reply_markup=builder.as_markup())
     
     # Only store file_id in Redis if it exists
     if file_id is not None:
@@ -54,13 +56,14 @@ async def handle_adjust_size(callback: CallbackQuery, bot: Bot):
     action = data[1]  # +10 или -10
     message = callback.message
     file_id = storage.get(message.message_id)
-    if not file_id:
-        return message.answer("Произошла какая то ошибка, файл не найден")
+    file_bytes = None
     # Выводим в консоль
-    file = await bot.get_file(file_id)
-    file_bytes = await bot.download_file(file.file_path)
+    if file_id is not None:
+        file = await bot.get_file(file_id)
+        file_bytes = await bot.download_file(file.file_path)
+        file_bytes = file_bytes.read()
     font_size = int(action)
-    result_image = image_instagram_process_interactor(image=file_bytes.read(), text=message.caption,
+    result_image = image_instagram_process_interactor(image=file_bytes, text=message.caption,
                                                       font_size=font_size)
     result_file = BufferedInputFile(result_image, filename="result.png")
     # Отправляем ответ пользователю (чтобы убрать "часики" у кнопки)
