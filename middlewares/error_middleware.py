@@ -3,7 +3,7 @@ from aiogram import Router
 from aiogram.types import ErrorEvent
 from aiogram.dispatcher.middlewares.base import BaseMiddleware
 
-from config import logger
+from logging_config import app_logger
 
 
 class ErrorLoggingMiddleware(BaseMiddleware):
@@ -12,9 +12,8 @@ class ErrorLoggingMiddleware(BaseMiddleware):
             # Продолжаем выполнение хэндлера
             return await handler(event, data)
         except Exception as e:
-            print("Exception ")
             # Логируем ошибку
-            logger.error(f"Ошибка в хэндлере: {e}", exc_info=True)
+            app_logger.error(f"Ошибка в хэндлере: {e}", exc_info=True)
             # Можно также отправить сообщение об ошибке в Telegram
             # bot = data.get("bot")
             # if bot:
